@@ -11,6 +11,7 @@ import {
   insertContactSchema,
   upsertAboutPageContentSchema,
   insertTourSchema,
+  insertTestimonialSchema
 } from "@shared/schema";
 
 // ImageKit Imports
@@ -102,8 +103,13 @@ export function configureApiRouter(): Router {
 
   // --- Testimonials ---
   apiRouter.get("/testimonials", async (req: Request, res: Response, next: NextFunction) => {
-       try { res.json(await storage.getTestimonials()); } catch (error) { console.error("[API /testimonials GET] Error:", error); next(error); }
-  });
+    try {
+       res.json(await storage.getTestimonials());
+    } catch (error) {
+       console.error("[API /testimonials GET] Error:", error);
+       next(error);
+    }
+});
 
   // --- Gallery Images ---
   apiRouter.get("/gallery", async (req: Request, res: Response, next: NextFunction) => {
@@ -351,6 +357,66 @@ export function configureApiRouter(): Router {
           next(error);
        }
   });
+
+    // --- Admin Manage Testimonials ---
+    apiRouter.get("/admin/testimonials", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const testimonials = await storage.getTestimonials();
+            res.json(testimonials); // Attempt to send JSON
+        } catch (error) {
+            next(error); // Pass error to global handler
+        }
+    });
+  
+    apiRouter.post("/admin/testimonials", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Validate incoming data using the insert schema
+            const validatedData = insertTestimonialSchema.parse(req.body);
+            const newTestimonial = await storage.createTestimonial(validatedData);
+            res.status(201).json(newTestimonial);
+        } catch (error) {
+            console.error("[API /admin/testimonials POST] Error:", error);
+            if (error instanceof z.ZodError) {
+                return res.status(400).json({ message: "Invalid testimonial data", errors: error.flatten().fieldErrors });
+            }
+            next(error);
+        }
+    });
+
+    apiRouter.patch("/admin/testimonials/:id", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
+        const id = parseInt(req.params.id, 10); // Get ID from URL parameter
+        if (isNaN(id)) return res.status(400).json({ message: "Invalid testimonial ID format" });
+  
+        try {
+            const validatedUpdate = insertTestimonialSchema.partial().parse(req.body);
+            const updatedTestimonial = await storage.updateTestimonial(id, validatedUpdate);
+            if (!updatedTestimonial) {
+                return res.status(404).json({ message: "Testimonial not found" });
+            }
+            res.json(updatedTestimonial);
+        } catch (error) {
+            console.error(`[API /admin/testimonials/${id} PATCH] Error:`, error);
+            if (error instanceof z.ZodError) {
+                return res.status(400).json({ message: "Invalid testimonial data", errors: error.flatten().fieldErrors });
+            }
+            next(error);
+        }
+    });
+  
+    apiRouter.delete("/admin/testimonials/:id", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) return res.status(400).json({ message: "Invalid testimonial ID format" });
+        try {
+            const success = await storage.deleteTestimonial(id);
+            if (!success) {
+                return res.status(404).json({ message: "Testimonial not found or could not be deleted" });
+            }
+            res.status(200).json({ message: "Testimonial deleted successfully" });
+        } catch (error) {
+            console.error(`[API /admin/testimonials/${id} DELETE] Error:`, error);
+            next(error);
+        }
+    });
 
   // Return the configured router instance
   return apiRouter;

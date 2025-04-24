@@ -7,7 +7,7 @@ import type {
   GalleryImage, InsertGalleryImage,
   NewsletterSubscriber, InsertNewsletter,
   ContactMessage, InsertContact,
-  AboutPageContent, InsertAboutPageContent
+  AboutPageContent, InsertAboutPageContent,
 } from "@shared/schema";
 
 // Define the interface ONLY in this file
@@ -38,6 +38,9 @@ export interface IStorage {
   getTestimonials(): Promise<Testimonial[]>;
   getTestimonial(id: number): Promise<Testimonial | undefined>;
   createTestimonial(testimonial: InsertTestimonial): Promise<Testimonial>;
+  updateTestimonial(id: number, testimonialUpdate: Partial<InsertTestimonial>): Promise<Testimonial | undefined>; 
+  deleteTestimonial(id: number): Promise<boolean>; 
+
 
   // Gallery methods
   getGalleryImages(): Promise<GalleryImage[]>;

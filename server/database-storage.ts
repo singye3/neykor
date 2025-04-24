@@ -4,13 +4,13 @@ import {
   users, type User, type InsertUser,
   tours, type Tour, type InsertTour, type ItineraryDay, // Ensure ItineraryDay is imported
   inquiries, type Inquiry, type InsertInquiry,
-  testimonials, type Testimonial, type InsertTestimonial,
+  testimonials, type Testimonial, type InsertTestimonial, insertTestimonialSchema,
   galleryImages, type GalleryImage, type InsertGalleryImage,
   newsletterSubscribers, type NewsletterSubscriber, type InsertNewsletter,
   contactMessages, type ContactMessage, type InsertContact,
   aboutPageContent, type AboutPageContent, type InsertAboutPageContent,
 } from "@shared/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, desc } from "drizzle-orm";
 import { db, pool } from "./db";
 import type { IStorage } from "./storage"; // Import the Interface
 import connectPgSimple from "connect-pg-simple";
@@ -192,6 +192,25 @@ export class DatabaseStorage implements IStorage {
     const [newTestimonial] = await db.insert(testimonials).values(testimonial).returning();
     return newTestimonial;
   }
+
+  async updateTestimonial(id: number, testimonialUpdate: Partial<InsertTestimonial>): Promise<Testimonial | undefined> {
+    // Optionally validate partial data if needed using .partial()
+    // const validatedUpdate = insertTestimonialSchema.partial().parse(testimonialUpdate);
+    const [updatedTestimonial] = await db
+      .update(testimonials)
+      .set(testimonialUpdate) // Use the partial update directly
+      .where(eq(testimonials.id, id))
+      .returning();
+    return updatedTestimonial || undefined;
+ }
+
+ async deleteTestimonial(id: number): Promise<boolean> {
+    const result = await db
+      .delete(testimonials)
+      .where(eq(testimonials.id, id))
+      .returning(); // Check if any row was returned (meaning deletion happened)
+    return result.length > 0;
+ }
 
   // --- Gallery methods ---
   async getGalleryImages(): Promise<GalleryImage[]> {

@@ -19,7 +19,8 @@ import AdminDashboard from "@/pages/Admin/AdminDashboard";
 import ManageTours from "@/pages/Admin/ManageTours";
 import ManageInquiries from "@/pages/Admin/ManageInquiries";
 import ManageAboutContent from "@/pages/Admin/ManageAboutContent";
-import ManageMessages from "@/pages/Admin/ManageMessages"; // <-- Import the new page
+import ManageMessages from "@/pages/Admin/ManageMessages";
+import ManageTestimonials from "@/pages/Admin/ManageTestimonials";
 import NotFound from "@/pages/not-found";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
@@ -57,7 +58,8 @@ function Router() {
         <ProtectedRoute path="/admin/tours" component={ManageTours} />
         <ProtectedRoute path="/admin/inquiries" component={ManageInquiries} />
         <ProtectedRoute path="/admin/content/about" component={ManageAboutContent} />
-        <ProtectedRoute path="/admin/messages" component={ManageMessages} /> {/* <-- Add route */}
+        <ProtectedRoute path="/admin/messages" component={ManageMessages} /> 
+        <ProtectedRoute path="/admin/testimonials" component={ManageTestimonials} />
         {/* Add other protected admin routes here */}
 
         {/* Catch-all Not Found Route */}
