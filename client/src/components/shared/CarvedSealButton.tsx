@@ -1,3 +1,4 @@
+// client/src/components/shared/CarvedSealButton.tsx
 import { Button, ButtonProps } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 

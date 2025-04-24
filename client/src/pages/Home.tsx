@@ -1,3 +1,4 @@
+// client/src/pages/Home.tsx
 import HeroSection from "@/components/home/HeroSection";
 import Introduction from "@/components/home/Introduction";
 import FeaturedPilgrimages from "@/components/home/FeaturedPilgrimages";

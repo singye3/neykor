@@ -1,3 +1,4 @@
+// client/src/pages/auth-page.tsx
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";

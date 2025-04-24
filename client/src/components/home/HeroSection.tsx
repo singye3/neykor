@@ -1,3 +1,4 @@
+// client/src/components/home/HeroSection.tsx
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";

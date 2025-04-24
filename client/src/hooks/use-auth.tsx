@@ -1,3 +1,4 @@
+// client/src/hooks/use-auth.tsx
 import { createContext, ReactNode, useContext } from "react";
 import {
   useQuery,

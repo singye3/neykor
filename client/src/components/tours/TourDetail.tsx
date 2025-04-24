@@ -1,3 +1,4 @@
+// client/src/components/tours/TourDetail.tsx
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { bhutaneseSymbols } from "@/lib/utils";

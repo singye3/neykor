@@ -1,3 +1,5 @@
+// client/src/components/tours/TourCard.tsx
+
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
 import { getImageUrl } from "@/lib/utils";

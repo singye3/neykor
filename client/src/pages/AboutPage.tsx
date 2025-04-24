@@ -1,3 +1,4 @@
+// client/src/pages/AboutPage.tsx
 import AboutSection from "@/components/about/AboutSection";
 
 export default function AboutPage() {

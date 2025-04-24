@@ -1,3 +1,4 @@
+// client/src/components/home/WhyChooseUs.tsx
 import { bhutaneseSymbols } from "@/lib/utils";
 
 export default function WhyChooseUs() {

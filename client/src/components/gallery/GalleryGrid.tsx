@@ -1,3 +1,4 @@
+// client/src/components/gallery/GalleryGrid.tsx
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getImageUrl } from "@/lib/utils";

@@ -1,3 +1,4 @@
+// client/src/pages/ContactPage.tsx
 import { useState, useEffect } from "react";
 import ContactForm from "@/components/contact/ContactForm";
 import { getImageUrl } from "@/lib/utils";

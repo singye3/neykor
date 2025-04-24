@@ -1,3 +1,4 @@
+// client/src/components/home/Testimonials.tsx
 import { useQuery } from "@tanstack/react-query";
 import { Testimonial } from "@shared/schema";
 import Loader from "@/components/shared/Loader";

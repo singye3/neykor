@@ -129,3 +129,34 @@ export const insertContactSchema = createInsertSchema(contactMessages).omit({
 
 export type InsertContact = z.infer<typeof insertContactSchema>;
 export type ContactMessage = typeof contactMessages.$inferSelect;
+
+
+// ==========================================
+// NEW: About Page Content table
+// ==========================================
+export const aboutPageContent = pgTable("aboutPageContent", {
+  id: serial("id").primaryKey(), // Use ID 1 for the single content entry
+  mainHeading: text("mainHeading").notNull().default("Our Sacred Journey"),
+  imageUrl: text("imageUrl").notNull().default(""), // Store the full image URL
+  imageAlt: text("imageAlt").notNull().default("Bhutanese Guide"),
+  historyText: text("historyText").notNull().default(""),
+  missionText: text("missionText").notNull().default(""),
+  philosophyHeading: text("philosophyHeading").notNull().default("Our Philosophy"),
+  philosophyQuote: text("philosophyQuote").notNull().default(""),
+  value1Title: text("value1Title").notNull().default("Authenticity"),
+  value1Text: text("value1Text").notNull().default(""),
+  value2Title: text("value2Title").notNull().default("Respect"),
+  value2Text: text("value2Text").notNull().default(""),
+  value3Title: text("value3Title").notNull().default("Knowledge"),
+  value3Text: text("value3Text").notNull().default(""),
+  updatedAt: timestamp("updatedAt").defaultNow(), // .onUpdateNow() might need explicit handling in UPSERT
+});
+
+// Zod schema for validation (omit id and updatedAt for inserts/updates)
+export const upsertAboutPageContentSchema = createInsertSchema(aboutPageContent).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type InsertAboutPageContent = z.infer<typeof upsertAboutPageContentSchema>;
+export type AboutPageContent = typeof aboutPageContent.$inferSelect;

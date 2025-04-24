@@ -1,3 +1,4 @@
+// client/src/components/shared/Loader.tsx
 import { bhutaneseSymbols } from "@/lib/utils";
 
 export default function Loader() {

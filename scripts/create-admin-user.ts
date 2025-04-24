@@ -1,3 +1,4 @@
+// scripts/create-admin-user.ts
 import 'dotenv/config';
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";

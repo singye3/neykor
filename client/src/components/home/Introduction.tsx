@@ -1,3 +1,4 @@
+// client/src/components/home/Introduction.tsx
 import BhutaneseBorder from "@/components/shared/BhutaneseBorder";
 
 export default function Introduction() {

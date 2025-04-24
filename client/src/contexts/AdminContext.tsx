@@ -1,3 +1,4 @@
+// client/src/contexts/AdminContext.tsx
 import React, { createContext, useContext, useState } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";

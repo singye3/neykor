@@ -1,3 +1,4 @@
+// client/src/components/home/FeaturedPilgrimages.tsx
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";

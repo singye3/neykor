@@ -1,3 +1,4 @@
+// client/src/pages/TourDetailPage.tsx
 import { useParams } from "wouter";
 import TourDetail from "@/components/tours/TourDetail";
 

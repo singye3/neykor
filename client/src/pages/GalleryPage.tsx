@@ -1,3 +1,4 @@
+// client/src/pages/GalleryPage.tsx
 import GalleryGrid from "@/components/gallery/GalleryGrid";
 import BhutaneseBorder from "@/components/shared/BhutaneseBorder";
 

@@ -2,7 +2,7 @@ import 'dotenv/config';
 import pkg from 'pg';
 const { Pool } = pkg;
 import { drizzle } from 'drizzle-orm/node-postgres';
-import * as schema from "@shared/schema";
+import * as schema from "../shared/schema.ts";
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
@@ -10,5 +10,8 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle(pool, { schema });
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+export const db = drizzle(pool, { schema }); // Pass the imported schema object

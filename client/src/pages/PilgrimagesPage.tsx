@@ -1,3 +1,4 @@
+// client/src/pages/PilgrimagesPage.tsx
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import TourCard from "@/components/tours/TourCard";
