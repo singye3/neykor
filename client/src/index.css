@@ -1,0 +1,193 @@
+/* src/app/globals.css (or your main CSS file) */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Theme Variables & Base Styles */
+@layer base {
+  :root {
+    /* Your Shadcn/UI style variables (keep if used elsewhere) */
+    --background: 43 38% 95%; /* Matches --color-parchment */
+    --foreground: 0 0% 20%; /* Matches --color-charcoal */
+    --card: 43 38% 95%;
+    --card-foreground: 0 0% 20%;
+    --popover: 43 38% 95%;
+    --popover-foreground: 0 0% 20%;
+    --primary: 9 65% 36%; /* Matches --color-monastic-red */
+    --primary-foreground: 43 38% 95%; /* Matches --color-parchment */
+    --secondary: 46 45% 55%; /* Matches --color-ochre */
+    --secondary-foreground: 0 0% 20%; /* Matches --color-charcoal */
+    --muted: 43 30% 85%; /* Matches --color-parchment-dark */
+    --muted-foreground: 0 0% 40%;
+    --accent: 43 52% 64%; /* Matches --color-faded-gold */
+    --accent-foreground: 0 0% 20%; /* Matches --color-charcoal */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 43 38% 95%;
+    --border: 43 52% 64%; /* Matches --color-faded-gold */
+    --input: 43 52% 64%; /* Matches --color-faded-gold */
+    --ring: 9 65% 36%; /* Matches --color-monastic-red */
+    --radius: 0rem; /* Setting global radius to 0 */
+
+    /* Your Custom Color Variables */
+    --color-terracotta: 14 54% 50%;
+    --color-ochre: 46 45% 55%;
+    --color-monastic-red: 9 65% 36%;
+    --color-faded-gold: 43 52% 64%;
+    --color-charcoal: 0 0% 20%;
+    --color-parchment: 43 38% 95%;
+    --color-parchment-dark: 43 30% 85%;
+  }
+
+  /* Define dark mode variables if needed */
+  /* .dark { ... } */
+}
+
+@layer base {
+  * {
+    @apply border-border; /* Applies default border color from variables */
+  }
+
+  body {
+    /* Use HSL variables for colors */
+    @apply bg-parchment text-charcoal antialiased;
+    font-family: 'EB Garamond', serif; /* Ensure this font is linked in your layout */
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cinzel', serif; /* Ensure this font is linked in your layout */
+    @apply text-monastic-red; /* Apply heading color globally */
+  }
+}
+
+/* Custom Utilities */
+@layer utilities {
+  .lokta-paper-bg {
+    background-size: cover;
+    background-blend-mode: overlay;
+    background-color: hsla(var(--color-parchment), 0.85);
+  }
+
+  .wood-texture-bg {
+    background-size: cover;
+    background-blend-mode: overlay;
+    background-color: hsla(var(--color-terracotta), 0.2);
+  }
+
+  .textile-texture-bg {
+    background-size: cover;
+    background-blend-mode: overlay;
+    background-color: hsla(var(--color-parchment), 0.8);
+  }
+
+  .filter-aged {
+    filter: sepia(20%) contrast(90%) brightness(95%);
+  }
+
+  .nav-link {
+    position: relative;
+    letter-spacing: 0.05em;
+  }
+
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    /* Use HSL variable */
+    background-color: hsl(var(--color-monastic-red));
+    transition: width 0.3s ease;
+  }
+
+  .nav-link:hover::after {
+    width: 100%;
+  }
+
+  .endless-knot {
+    position: relative;
+  }
+
+  .endless-knot::before {
+    content: "∞";
+    font-size: 1.2em;
+    position: absolute;
+    transform: rotate(90deg);
+    /* Use HSL variable */
+    color: hsl(var(--color-faded-gold));
+    opacity: 0.7;
+    left: -1.5em;
+    top: 0.1em;
+  }
+
+  /* Color Utility Classes */
+  .text-terracotta { color: hsl(var(--color-terracotta)); }
+  .text-ochre { color: hsl(var(--color-ochre)); }
+  .text-monastic-red { color: hsl(var(--color-monastic-red)); }
+  .text-faded-gold { color: hsl(var(--color-faded-gold)); }
+  .text-charcoal { color: hsl(var(--color-charcoal)); }
+  .text-parchment { color: hsl(var(--color-parchment)); }
+
+  .bg-terracotta { background-color: hsl(var(--color-terracotta)); }
+  .bg-ochre { background-color: hsl(var(--color-ochre)); }
+  .bg-monastic-red { background-color: hsl(var(--color-monastic-red)); }
+  .bg-faded-gold { background-color: hsl(var(--color-faded-gold)); }
+  .bg-charcoal { background-color: hsl(var(--color-charcoal)); }
+  .bg-parchment { background-color: hsl(var(--color-parchment)); }
+  .bg-parchment-dark { background-color: hsl(var(--color-parchment-dark)); }
+
+  .border-terracotta { border-color: hsl(var(--color-terracotta)); }
+  .border-ochre { border-color: hsl(var(--color-ochre)); }
+  .border-monastic-red { border-color: hsl(var(--color-monastic-red)); }
+  .border-faded-gold { border-color: hsl(var(--color-faded-gold)); }
+  .border-charcoal { border-color: hsl(var(--color-charcoal)); }
+  .border-parchment { border-color: hsl(var(--color-parchment)); }
+  .border-parchment-dark { border-color: hsl(var(--color-parchment-dark)); }
+}
+
+/* Custom Components */
+@layer components {
+  .parchment-input {
+    /* Use HSL variables */
+    background-color: hsla(var(--color-parchment), 0.5);
+    border: 1px solid hsl(var(--color-faded-gold));
+    color: hsl(var(--color-charcoal));
+    transition: all 0.3s ease;
+    @apply rounded-none; /* Apply global radius */
+  }
+
+  .parchment-input:focus {
+    border-color: hsl(var(--color-monastic-red));
+    outline: none;
+    background-color: hsl(var(--color-parchment));
+  }
+
+  /* --- Custom Swiper Styles (using theme colors) --- */
+  .swiper-button-next,
+  .swiper-button-prev {
+    color: hsl(var(--color-parchment)) !important; /* Use light color for arrows */
+    background-color: hsla(var(--color-charcoal), 0.4) !important; /* Use dark theme color with alpha */
+    border-radius: 50%;
+    width: 40px !important;
+    height: 40px !important;
+    transition: background-color 0.2s ease;
+  }
+  .swiper-button-next:hover,
+  .swiper-button-prev:hover {
+    background-color: hsla(var(--color-charcoal), 0.7) !important; /* Darker on hover */
+  }
+  .swiper-button-next::after,
+  .swiper-button-prev::after {
+    font-size: 18px !important;
+    font-weight: bold;
+  }
+  .swiper-pagination-bullet {
+    background-color: hsl(var(--color-faded-gold)) !important; /* Use accent color for inactive */
+    opacity: 0.6 !important;
+  }
+  .swiper-pagination-bullet-active {
+    background-color: hsl(var(--color-monastic-red)) !important; /* Use primary color for active */
+    opacity: 1 !important;
+  }
+}
