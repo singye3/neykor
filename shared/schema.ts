@@ -17,6 +17,63 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
+// ==========================================
+// NEW: Home Page Content table
+// ==========================================
+export const homePageContent = pgTable("homePageContent", {
+  id: serial("id").primaryKey(), // Use ID 1 for the single entry
+
+  // Hero Section
+  heroImageURL: text("heroImageURL").notNull().default(""),
+  heroImageAlt: text("heroImageAlt").notNull().default("Ancient Bhutanese Temple"),
+  heroHeadingLine1: text("heroHeadingLine1").notNull().default("Walk the Ancient Paths:"),
+  heroHeadingLine2: text("heroHeadingLine2").notNull().default("Bhutan Pilgrimage Through the Ages"),
+  heroParagraph: text("heroParagraph").notNull().default("Discover pilgrimages steeped in history..."),
+  heroButtonText: text("heroButtonText").notNull().default("Explore Our Sacred Routes"),
+
+  // Introduction Section
+  introHeading: text("introHeading").notNull().default("Ancient Tradition, Timeless Journey"),
+  introParagraph1: text("introParagraph1").notNull().default("Sacred Bhutan Travels invites you..."),
+  introParagraph2: text("introParagraph2").notNull().default("Each pilgrimage follows routes..."),
+
+  // Featured Pilgrimages Section
+  featuredHeading: text("featuredHeading").notNull().default("Our Sacred Journeys"),
+  featuredMapURL: text("featuredMapURL").notNull().default(""),
+  featuredMapAlt: text("featuredMapAlt").notNull().default("Vintage-style map of Bhutan"),
+  featuredMapCaption: text("featuredMapCaption").notNull().default("Ancient cartography revealing..."),
+  featuredButtonText: text("featuredButtonText").notNull().default("View All Pilgrimages"),
+
+  // Image Carousel Section (Only heading is static here)
+  carouselHeading: text("carouselHeading").notNull().default("Moments from Our Journeys"),
+
+  // Why Choose Us Section
+  whyHeading: text("whyHeading").notNull().default("Why Journey With Us"),
+  why1Icon: text("why1Icon").notNull().default("☸"), // Store symbol/character
+  why1Title: text("why1Title").notNull().default("Guardians of Tradition"),
+  why1Text: text("why1Text").notNull().default("Our guides are descendants..."),
+  why2Icon: text("why2Icon").notNull().default("📜"), // Using scroll emoji as example
+  why2Title: text("why2Title").notNull().default("Deep Historical Knowledge"),
+  why2Text: text("why2Text").notNull().default("Each journey is enriched..."),
+  why3Icon: text("why3Icon").notNull().default("🤝"), // Using handshake emoji as example
+  why3Title: text("why3Title").notNull().default("Authentic Encounters"),
+  why3Text: text("why3Text").notNull().default("We create meaningful connections..."),
+
+   // Testimonials Section (Only heading is static here)
+   testimonialsHeading: text("testimonialsHeading").notNull().default("Pilgrim Chronicles"),
+
+  // Timestamps
+  updatedAt: timestamp("updatedAt").defaultNow(),
+});
+
+// Zod schema for validation (omit id and updatedAt for updates)
+export const upsertHomePageContentSchema = createInsertSchema(homePageContent).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type InsertHomePageContent = z.infer<typeof upsertHomePageContentSchema>;
+export type HomePageContent = typeof homePageContent.$inferSelect;
+
 // Tours table
 export const tours = pgTable("tours", {
   id: serial("id").primaryKey(),

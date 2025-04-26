@@ -23,7 +23,6 @@ interface DashboardStat {
 async function fetchAdminStats(): Promise<DashboardStat[]> {
     const res = await apiRequest("GET", "/api/admin/stats"); // Uses helper that includes credentials
     if (!res.ok) {
-        // apiRequest usually throws, but double-check
         const errorData = await res.json().catch(() => ({ message: "Failed to parse error response" }));
         throw new Error(errorData.message || `Failed to fetch admin stats: ${res.statusText}`);
     }
@@ -31,25 +30,20 @@ async function fetchAdminStats(): Promise<DashboardStat[]> {
 }
 
 export default function AdminDashboard() {
-  // Get user info and logout mutation from the authentication context
   const { user, logoutMutation } = useAuth();
-  // Get the toast function for showing notifications
   const { toast } = useToast();
 
-  // Fetch dashboard statistics using React Query
   const { data: dashboardStats, isLoading: isLoadingStats, isError: isErrorStats, error: errorStats } = useQuery<DashboardStat[], Error>({
-    queryKey: ['adminStats'], // Unique key for caching this query
-    queryFn: fetchAdminStats, // The function to fetch the data
-    staleTime: 1000 * 60 * 5, // Consider data stale after 5 minutes
-    refetchOnWindowFocus: true, // Refetch when window regains focus
+    queryKey: ['adminStats'],
+    queryFn: fetchAdminStats,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: true,
   });
 
-   // Handler for the logout button click
    const handleLogout = () => {
-        logoutMutation.mutate(undefined, { // Pass undefined if mutate doesn't expect arguments
+        logoutMutation.mutate(undefined, {
             onSuccess: () => {
                 toast({ title: "Logged Out", description: "You have been successfully logged out." });
-                // No need to redirect here, ProtectedRoute/useAuth should handle it
             },
             onError: (err) => {
                  toast({ title: "Logout Failed", description: err.message || "An error occurred during logout.", variant: "destructive" });
@@ -70,7 +64,7 @@ export default function AdminDashboard() {
           </div>
           {/* Welcome Message & Logout Button */}
           <div className="flex items-center space-x-4">
-            <span className="font-garamond hidden sm:inline"> {/* Hide on small screens */}
+            <span className="font-garamond hidden sm:inline">
                 Welcome, {user?.username || 'Administrator'}
             </span>
             <Button
@@ -78,10 +72,10 @@ export default function AdminDashboard() {
               size="sm"
               className="text-parchment border-parchment hover:bg-monastic-red/80 hover:text-parchment"
               onClick={handleLogout}
-              disabled={logoutMutation.isPending} // Disable button during logout process
+              disabled={logoutMutation.isPending}
               aria-label="Logout"
             >
-              <LogOut className={`h-4 w-4 ${logoutMutation.isPending ? 'animate-spin' : ''}`}/> {/* Logout Icon */}
+              <LogOut className={`h-4 w-4 ${logoutMutation.isPending ? 'animate-spin' : ''}`}/>
             </Button>
           </div>
         </div>
@@ -95,12 +89,10 @@ export default function AdminDashboard() {
          {isLoadingStats ? (
             <div className="flex justify-center items-center h-32"> <Loader /> </div>
         ) : isErrorStats ? (
-            // Display error message if fetching stats failed
             <div className="text-center text-destructive bg-red-100 border border-destructive p-4 rounded-md">
                 Error loading dashboard stats: {errorStats?.message || "Unknown error"}
             </div>
         ) : (
-            // Display stats cards if data fetched successfully
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                 {dashboardStats?.map((stat) => (
                 <Card key={stat.label} className="border-faded-gold bg-parchment/50 shadow-sm hover:shadow-md transition-shadow">
@@ -108,12 +100,12 @@ export default function AdminDashboard() {
                     <CardTitle className="text-sm font-medium text-monastic-red">
                         {stat.label}
                     </CardTitle>
-                    <span className="text-2xl" role="img" aria-label={`${stat.label} icon`}>{stat.icon}</span> {/* Icon */}
+                    <span className="text-2xl" role="img" aria-label={`${stat.label} icon`}>{stat.icon}</span>
                     </CardHeader>
                     <CardContent>
-                    <div className="text-3xl font-bold text-charcoal">{stat.value}</div> {/* Stat value */}
+                    <div className="text-3xl font-bold text-charcoal">{stat.value}</div>
                     <Link href={stat.link} className="text-xs text-monastic-red hover:text-terracotta mt-1 inline-block font-semibold">
-                        Manage → {/* Link to manage section */}
+                        Manage →
                     </Link>
                     </CardContent>
                 </Card>
@@ -126,7 +118,8 @@ export default function AdminDashboard() {
             {/* Content Management Section */}
             <div>
                 <h3 className="font-trajan text-xl text-monastic-red mb-4 border-b border-faded-gold pb-2">Content Management</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Adjusted grid to potentially accommodate more items */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {/* Manage Tours Card */}
                     <Link href="/admin/tours" className="block group">
                         <Card className="border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg">
@@ -138,7 +131,14 @@ export default function AdminDashboard() {
                     <Link href="/admin/content/about" className="block group">
                         <Card className="border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg">
                         <CardHeader> <CardTitle className="text-lg text-monastic-red">Manage About Page</CardTitle> </CardHeader>
-                        <CardContent> <p className="font-garamond text-sm">Edit the text and image displayed on the About Us page.</p> </CardContent>
+                        <CardContent> <p className="font-garamond text-sm">Edit text and image for the About Us page.</p> </CardContent>
+                        </Card>
+                    </Link>
+                     {/* Manage Home Page Card - ADDED */}
+                    <Link href="/admin/content/home" className="block group">
+                        <Card className="border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg">
+                        <CardHeader> <CardTitle className="text-lg text-monastic-red">Manage Home Page</CardTitle> </CardHeader>
+                        <CardContent> <p className="font-garamond text-sm">Edit text, images, and titles on the main home page.</p> </CardContent>
                         </Card>
                     </Link>
                     {/* Manage Testimonials Card */}
@@ -156,7 +156,8 @@ export default function AdminDashboard() {
             {/* Communication Section */}
              <div>
                 <h3 className="font-trajan text-xl text-monastic-red mb-4 border-b border-faded-gold pb-2">Communication</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                 {/* Adjusted grid layout if needed */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {/* Manage Inquiries Card */}
                     <Link href="/admin/inquiries" className="block group">
                         <Card className="border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg">

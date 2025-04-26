@@ -21,6 +21,7 @@ import ManageInquiries from "@/pages/Admin/ManageInquiries";
 import ManageAboutContent from "@/pages/Admin/ManageAboutContent";
 import ManageMessages from "@/pages/Admin/ManageMessages";
 import ManageTestimonials from "@/pages/Admin/ManageTestimonials";
+import ManageHomePage from "@/pages/Admin/ManageHomePage"; // <-- Import ManageHomePage
 import NotFound from "@/pages/not-found";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
@@ -28,7 +29,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 function Router() {
   const [location] = useLocation();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading } = useAuth(); // useAuth might be needed if ProtectedRoute uses it implicitly
   const isAdminRoute = location.startsWith("/admin");
   const isAuthRoute = location === "/auth";
   const showLayout = !isAdminRoute && !isAuthRoute;
@@ -49,6 +50,7 @@ function Router() {
         <Route path="/auth" component={AuthPage} />
 
         {/* Admin Routes */}
+        {/* Redirect /admin to dashboard if logged in */}
         <Route path="/admin">
           {() => <ProtectedRoute path="/admin" component={AdminDashboard} />}
         </Route>
@@ -57,10 +59,12 @@ function Router() {
         <ProtectedRoute path="/admin/dashboard" component={AdminDashboard} />
         <ProtectedRoute path="/admin/tours" component={ManageTours} />
         <ProtectedRoute path="/admin/inquiries" component={ManageInquiries} />
-        <ProtectedRoute path="/admin/content/about" component={ManageAboutContent} />
-        <ProtectedRoute path="/admin/messages" component={ManageMessages} /> 
+        <ProtectedRoute path="/admin/messages" component={ManageMessages} />
         <ProtectedRoute path="/admin/testimonials" component={ManageTestimonials} />
-        {/* Add other protected admin routes here */}
+        {/* Content Management Routes */}
+        <ProtectedRoute path="/admin/content/about" component={ManageAboutContent} />
+        <ProtectedRoute path="/admin/content/home" component={ManageHomePage} /> {/* <-- Add Route */}
+        {/* Add future protected admin routes here (e.g., /admin/gallery) */}
 
         {/* Catch-all Not Found Route */}
         <Route component={NotFound} />
@@ -77,7 +81,8 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
-            <ReactQueryDevtools initialIsOpen={false} />
+            {/* React Query DevTools only in development */}
+            {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
           </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>

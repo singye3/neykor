@@ -11,7 +11,8 @@ import {
   insertContactSchema,
   upsertAboutPageContentSchema,
   insertTourSchema,
-  insertTestimonialSchema
+  insertTestimonialSchema,
+  upsertHomePageContentSchema,
 } from "@shared/schema";
 
 // ImageKit Imports
@@ -54,6 +55,36 @@ export function configureApiRouter(): Router {
           const images = fileObjects.map(file => ({ id: file.fileId, src: file.url, alt: file.name }));
           res.json(images);
       } catch (error) { console.error('[API /carousel-images] Error:', error); next(error); }
+  });
+
+  // --- Home Page Content (Public GET) ---
+  apiRouter.get("/content/home", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      let content = await storage.getHomePageContent();
+      if (!content) {
+        console.warn("[API /content/home GET] No content found, returning default structure.");
+        // Provide a default structure matching HomePageContent
+        content = {
+           id: 1,
+           heroImageURL: "DEFAULT_HERO_URL", heroImageAlt: "Default Alt",
+           heroHeadingLine1: "Default Heading 1", heroHeadingLine2: "Default Heading 2",
+           heroParagraph: "Default paragraph.", heroButtonText: "Default Button",
+           introHeading: "Default Intro Heading", introParagraph1: "Default P1", introParagraph2: "Default P2",
+           featuredHeading: "Default Featured Heading", featuredMapURL: "DEFAULT_MAP_URL",
+           featuredMapAlt: "Default Map Alt", featuredMapCaption: "Default Map Caption", featuredButtonText: "Default Button",
+           carouselHeading: "Default Carousel Heading", whyHeading: "Default Why Heading",
+           why1Icon: "?", why1Title: "Default Title 1", why1Text: "Default Text 1",
+           why2Icon: "?", why2Title: "Default Title 2", why2Text: "Default Text 2",
+           why3Icon: "?", why3Title: "Default Title 3", why3Text: "Default Text 3",
+           testimonialsHeading: "Default Testimonials Heading",
+           updatedAt: new Date(),
+        };
+      }
+      res.json(content);
+    } catch (error) {
+      console.error("[API /content/home GET] Error:", error);
+      next(error);
+    }
   });
 
   // --- About Page Content ---
@@ -236,6 +267,20 @@ export function configureApiRouter(): Router {
           next(error);
       }
   });
+
+  // --- Admin Manage Home Page Content ---
+  apiRouter.patch("/content/home", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+       const validatedData = upsertHomePageContentSchema.parse(req.body);
+       const updatedContent = await storage.updateHomePageContent(validatedData);
+       if (!updatedContent) return res.status(500).json({ message: "Failed to save home page content." });
+       res.json(updatedContent);
+    } catch (error) {
+       console.error("[API /content/home PATCH] Error:", error);
+       if (error instanceof z.ZodError) return res.status(400).json({ message: "Invalid data", errors: error.flatten().fieldErrors });
+       next(error);
+    }
+ });
 
   // --- Admin Manage About Content ---
   apiRouter.patch("/content/about", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {

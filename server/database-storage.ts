@@ -2,6 +2,7 @@
 
 import {
   users, type User, type InsertUser,
+  homePageContent, type HomePageContent, type InsertHomePageContent,
   tours, type Tour, type InsertTour, type ItineraryDay, // Ensure ItineraryDay is imported
   inquiries, type Inquiry, type InsertInquiry,
   testimonials, type Testimonial, type InsertTestimonial, insertTestimonialSchema,
@@ -48,6 +49,36 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+    // ==========================================
+  // NEW: Home Page Content methods
+  // ==========================================
+  async getHomePageContent(): Promise<HomePageContent | undefined> {
+    // Fetch the row with ID 1
+    const [content] = await db.select().from(homePageContent).where(eq(homePageContent.id, 1));
+    return content || undefined;
+  }
+
+  async updateHomePageContent(contentUpdate: InsertHomePageContent): Promise<HomePageContent | undefined> {
+    // Prepare the SET part for the UPSERT, referencing the incoming values
+    // Exclude id and updatedAt as they are handled separately or by the DB
+    const { id, updatedAt, ...updateData } = contentUpdate as any;
+    const setClause: Record<string, any> = {};
+    for (const key in updateData) {
+        setClause[key] = sql.raw(`excluded."${key}"`); // Use excluded.columnName syntax
+    }
+    setClause.updatedAt = new Date(); // Ensure updatedAt is set on update
+
+    const [updatedContent] = await db
+      .insert(homePageContent)
+      .values({ id: 1, ...contentUpdate }) // Insert with ID 1
+      .onConflictDoUpdate({
+        target: homePageContent.id, // Conflict on ID
+        set: setClause // Set fields to update
+      })
+      .returning();
+
+    return updatedContent || undefined;
+  }
   // ==========================================
   // Tour methods - CORRECTED with Type Assertion
   // ==========================================

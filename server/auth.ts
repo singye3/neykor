@@ -113,14 +113,11 @@ export const verifyAuthenticated = (req: Request, res: Response, next: NextFunct
 
 // Middleware specifically for Admin routes
 export const verifyAdmin = (req: Request, res: Response, next: NextFunction): void => {
-  console.log(`[verifyAdmin] Checking authentication for path: ${req.path}`); // LOG A
   if (req.isAuthenticated()) {
      // TODO: Add role check here if you implement roles
-     console.log(`[verifyAdmin] User is authenticated. Proceeding.`); // LOG B
      return next(); // User is authenticated, proceed to the route handler
   }
   // User is not authenticated
-  console.warn(`[verifyAdmin] User is NOT authenticated for path: ${req.path}. Sending 401.`); // LOG C
   res.status(401).json({ message: "Unauthorized: Authentication required." });
   // Do NOT call next() here, as the response is sent.
 };

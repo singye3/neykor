@@ -1,6 +1,7 @@
 import type session from "express-session";
 import type {
   User, InsertUser,
+  HomePageContent, InsertHomePageContent,
   Tour, InsertTour,
   Inquiry, InsertInquiry,
   Testimonial, InsertTestimonial,
@@ -18,6 +19,10 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+
+  // Home Page Content methods
+  getHomePageContent(): Promise<HomePageContent | undefined>;
+  updateHomePageContent(content: InsertHomePageContent): Promise<HomePageContent | undefined>;
 
   // Tour methods
   getTours(): Promise<Tour[]>;
