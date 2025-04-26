@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast"; // Toast notifications
 import { apiRequest } from "@/lib/queryClient"; // Helper for API requests
 import { bhutaneseSymbols } from "@/lib/utils"; // Theme symbols
 import Loader from "@/components/shared/Loader"; // Loading indicator
-import { LogOut } from "lucide-react"; // Icon for logout button
+import { LogOut, Settings, FileText, Mail, MessageSquare, Users, Image as ImageIcon } from "lucide-react"; // Icons
 
 // Define the structure of the stats object expected from the API
 interface DashboardStat {
@@ -30,20 +30,25 @@ async function fetchAdminStats(): Promise<DashboardStat[]> {
 }
 
 export default function AdminDashboard() {
+  // Get user info and logout mutation from the authentication context
   const { user, logoutMutation } = useAuth();
+  // Get the toast function for showing notifications
   const { toast } = useToast();
 
+  // Fetch dashboard statistics using React Query
   const { data: dashboardStats, isLoading: isLoadingStats, isError: isErrorStats, error: errorStats } = useQuery<DashboardStat[], Error>({
-    queryKey: ['adminStats'],
-    queryFn: fetchAdminStats,
-    staleTime: 1000 * 60 * 5,
-    refetchOnWindowFocus: true,
+    queryKey: ['adminStats'], // Unique key for caching this query
+    queryFn: fetchAdminStats, // The function to fetch the data
+    staleTime: 1000 * 60 * 1, // Consider data stale after 1 minute for dashboard stats
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 
+   // Handler for the logout button click
    const handleLogout = () => {
-        logoutMutation.mutate(undefined, {
+        logoutMutation.mutate(undefined, { // Pass undefined if mutate doesn't expect arguments
             onSuccess: () => {
                 toast({ title: "Logged Out", description: "You have been successfully logged out." });
+                // No need to redirect here, ProtectedRoute/useAuth should handle it
             },
             onError: (err) => {
                  toast({ title: "Logout Failed", description: err.message || "An error occurred during logout.", variant: "destructive" });
@@ -55,7 +60,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-parchment"> {/* Main container with theme background */}
 
       {/* Admin Header Section */}
-      <div className="bg-monastic-red text-parchment p-4 shadow-md">
+      <div className="bg-monastic-red text-parchment p-4 shadow-md sticky top-0 z-40"> {/* Make header sticky */}
         <div className="container mx-auto flex justify-between items-center">
           {/* Branding */}
           <div className="flex items-center space-x-2">
@@ -89,7 +94,7 @@ export default function AdminDashboard() {
          {isLoadingStats ? (
             <div className="flex justify-center items-center h-32"> <Loader /> </div>
         ) : isErrorStats ? (
-            <div className="text-center text-destructive bg-red-100 border border-destructive p-4 rounded-md">
+            <div className="text-center text-destructive bg-red-100 border border-destructive p-4 rounded-md mb-8">
                 Error loading dashboard stats: {errorStats?.message || "Unknown error"}
             </div>
         ) : (
@@ -100,7 +105,7 @@ export default function AdminDashboard() {
                     <CardTitle className="text-sm font-medium text-monastic-red">
                         {stat.label}
                     </CardTitle>
-                    <span className="text-2xl" role="img" aria-label={`${stat.label} icon`}>{stat.icon}</span>
+                    <span className="text-2xl text-monastic-red/80" role="img" aria-label={`${stat.label} icon`}>{stat.icon}</span>
                     </CardHeader>
                     <CardContent>
                     <div className="text-3xl font-bold text-charcoal">{stat.value}</div>
@@ -117,67 +122,95 @@ export default function AdminDashboard() {
         <div className="space-y-10">
             {/* Content Management Section */}
             <div>
-                <h3 className="font-trajan text-xl text-monastic-red mb-4 border-b border-faded-gold pb-2">Content Management</h3>
-                {/* Adjusted grid to potentially accommodate more items */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <h3 className="font-trajan text-xl text-monastic-red mb-4 border-b border-faded-gold pb-2 flex items-center gap-2">
+                    <FileText className="h-5 w-5" /> Content Management
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {/* Manage Tours Card */}
                     <Link href="/admin/tours" className="block group">
                         <Card className="border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg">
                         <CardHeader> <CardTitle className="text-lg text-monastic-red">Manage Tours</CardTitle> </CardHeader>
-                        <CardContent> <p className="font-garamond text-sm">Add, edit, or remove pilgrimage tours and itineraries.</p> </CardContent>
+                        <CardContent> <p className="font-garamond text-sm">Add, edit, or remove pilgrimage tours.</p> </CardContent>
                         </Card>
                     </Link>
                     {/* Manage About Page Card */}
                     <Link href="/admin/content/about" className="block group">
                         <Card className="border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg">
                         <CardHeader> <CardTitle className="text-lg text-monastic-red">Manage About Page</CardTitle> </CardHeader>
-                        <CardContent> <p className="font-garamond text-sm">Edit text and image for the About Us page.</p> </CardContent>
+                        <CardContent> <p className="font-garamond text-sm">Edit the About Us page content.</p> </CardContent>
                         </Card>
                     </Link>
-                     {/* Manage Home Page Card - ADDED */}
+                     {/* Manage Home Page Card */}
                     <Link href="/admin/content/home" className="block group">
                         <Card className="border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg">
                         <CardHeader> <CardTitle className="text-lg text-monastic-red">Manage Home Page</CardTitle> </CardHeader>
-                        <CardContent> <p className="font-garamond text-sm">Edit text, images, and titles on the main home page.</p> </CardContent>
+                        <CardContent> <p className="font-garamond text-sm">Edit content on the main home page.</p> </CardContent>
                         </Card>
                     </Link>
                     {/* Manage Testimonials Card */}
                     <Link href="/admin/testimonials" className="block group">
                         <Card className="border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg">
                         <CardHeader> <CardTitle className="text-lg text-monastic-red">Manage Testimonials</CardTitle> </CardHeader>
-                        <CardContent> <p className="font-garamond text-sm">Add, edit, or delete pilgrim testimonials.</p> </CardContent>
+                        <CardContent> <p className="font-garamond text-sm">Add, edit, or delete testimonials.</p> </CardContent>
                         </Card>
                     </Link>
-                    {/* Add Manage Gallery Link Here Later */}
-                    {/* <Link href="/admin/gallery" className="block group"><Card>...</Card></Link> */}
+                    {/* Placeholder for Gallery Management */}
+                    <Card className="border-dashed border-faded-gold/50 bg-parchment/30 h-full flex items-center justify-center text-charcoal/60">
+                         <div className="text-center">
+                            <ImageIcon className="mx-auto h-8 w-8 mb-2"/>
+                            <p className="font-garamond text-sm">(Manage Gallery - Future)</p>
+                         </div>
+                    </Card>
                 </div>
             </div>
 
             {/* Communication Section */}
              <div>
-                <h3 className="font-trajan text-xl text-monastic-red mb-4 border-b border-faded-gold pb-2">Communication</h3>
-                 {/* Adjusted grid layout if needed */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <h3 className="font-trajan text-xl text-monastic-red mb-4 border-b border-faded-gold pb-2 flex items-center gap-2">
+                    <Mail className="h-5 w-5"/> Communication
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {/* Manage Inquiries Card */}
                     <Link href="/admin/inquiries" className="block group">
                         <Card className="border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg">
                         <CardHeader> <CardTitle className="text-lg text-monastic-red">Manage Tour Inquiries</CardTitle> </CardHeader>
-                        <CardContent> <p className="font-garamond text-sm">View and respond to customer tour inquiries.</p> </CardContent>
+                        <CardContent> <p className="font-garamond text-sm">View and handle tour inquiries.</p> </CardContent>
                         </Card>
                     </Link>
                     {/* Manage Messages Card */}
                     <Link href="/admin/messages" className="block group">
                         <Card className="border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg">
                         <CardHeader> <CardTitle className="text-lg text-monastic-red">Manage Contact Messages</CardTitle> </CardHeader>
-                        <CardContent> <p className="font-garamond text-sm">View and manage messages sent via the contact form.</p> </CardContent>
+                        <CardContent> <p className="font-garamond text-sm">View and handle contact form messages.</p> </CardContent>
                         </Card>
                     </Link>
-                    {/* Add Manage Newsletter Subscribers Link Here Later? */}
-                    {/* <Link href="/admin/subscribers" className="block group"><Card>...</Card></Link> */}
+                    {/* Placeholder for Newsletter Management */}
+                     <Card className="border-dashed border-faded-gold/50 bg-parchment/30 h-full flex items-center justify-center text-charcoal/60">
+                         <div className="text-center">
+                            <Users className="mx-auto h-8 w-8 mb-2"/>
+                            <p className="font-garamond text-sm">(Manage Subscribers - Future)</p>
+                         </div>
+                    </Card>
+                </div>
+             </div>
+
+            {/* Settings Section */}
+             <div>
+                <h3 className="font-trajan text-xl text-monastic-red mb-4 border-b border-faded-gold pb-2 flex items-center gap-2">
+                    <Settings className="h-5 w-5"/> Configuration
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {/* Site Settings Card */}
+                    <Link href="/admin/settings/site" className="block group">
+                        <Card className="border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg">
+                        <CardHeader> <CardTitle className="text-lg text-monastic-red">Site Settings</CardTitle> </CardHeader>
+                        <CardContent> <p className="font-garamond text-sm">Edit website name and other global settings.</p> </CardContent>
+                        </Card>
+                    </Link>
+                    {/* Add other settings cards here if needed */}
                 </div>
              </div>
         </div>
-
       </div>
     </div>
   );

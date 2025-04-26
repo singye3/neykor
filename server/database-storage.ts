@@ -2,6 +2,7 @@
 
 import {
   users, type User, type InsertUser,
+  siteSettings, type SiteSettings, type InsertSiteSettings,
   homePageContent, type HomePageContent, type InsertHomePageContent,
   tours, type Tour, type InsertTour, type ItineraryDay, // Ensure ItineraryDay is imported
   inquiries, type Inquiry, type InsertInquiry,
@@ -49,8 +50,38 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-    // ==========================================
-  // NEW: Home Page Content methods
+  // ==========================================
+  // Site Settings methods
+  // ==========================================
+  async getSiteSettings(): Promise<SiteSettings | undefined> {
+    // Fetch the row with ID 1
+    const [settings] = await db.select().from(siteSettings).where(eq(siteSettings.id, 1));
+    return settings || undefined;
+  }
+
+  async updateSiteSettings(settingsUpdate: InsertSiteSettings): Promise<SiteSettings | undefined> {
+    // Prepare SET clause for UPSERT
+    const { id, updatedAt, ...updateData } = settingsUpdate as any;
+    const setClause: Record<string, any> = {};
+    for (const key in updateData) {
+        setClause[key] = sql.raw(`excluded."${key}"`);
+    }
+    setClause.updatedAt = new Date();
+
+    const [updatedSettings] = await db
+      .insert(siteSettings)
+      .values({ id: 1, ...settingsUpdate }) // Insert with ID 1
+      .onConflictDoUpdate({
+        target: siteSettings.id, // Conflict on ID
+        set: setClause // Set fields to update
+      })
+      .returning();
+
+    return updatedSettings || undefined;
+  }
+
+  // ==========================================
+  // Home Page Content methods
   // ==========================================
   async getHomePageContent(): Promise<HomePageContent | undefined> {
     // Fetch the row with ID 1

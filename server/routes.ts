@@ -13,6 +13,7 @@ import {
   insertTourSchema,
   insertTestimonialSchema,
   upsertHomePageContentSchema,
+  upsertSiteSettingsSchema,
 } from "@shared/schema";
 
 // ImageKit Imports
@@ -56,6 +57,27 @@ export function configureApiRouter(): Router {
           res.json(images);
       } catch (error) { console.error('[API /carousel-images] Error:', error); next(error); }
   });
+
+  // --- Site Settings (Public GET) ---
+  apiRouter.get("/settings/site", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      let settings = await storage.getSiteSettings();
+      if (!settings) {
+        console.warn("[API /settings/site GET] No settings found, returning default.");
+        settings = {
+          id: 1,
+          siteName: "Sacred Bhutan Travels (Default)",
+          updatedAt: new Date(),
+        };
+      }
+      // Only send necessary public settings (just siteName for now)
+      res.json({ siteName: settings.siteName });
+    } catch (error) {
+      console.error("[API /settings/site GET] Error:", error);
+      next(error);
+    }
+  });
+
 
   // --- Home Page Content (Public GET) ---
   apiRouter.get("/content/home", async (req: Request, res: Response, next: NextFunction) => {
@@ -266,6 +288,37 @@ export function configureApiRouter(): Router {
           console.error("[API /admin/stats GET] Error:", error);
           next(error);
       }
+  });
+
+  // --- Admin Manage Site Settings ---
+  // GET full settings for admin
+  apiRouter.get("/admin/settings/site", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      let settings = await storage.getSiteSettings();
+       if (!settings) { // Provide defaults if not seeded yet
+          settings = { id: 1, siteName: "Sacred Bhutan Travels (Default)", updatedAt: new Date() };
+       }
+      res.json(settings); // Admin gets all settings
+    } catch (error) {
+      console.error("[API /admin/settings/site GET] Error:", error);
+      next(error);
+    }
+  });
+
+  // PATCH site settings (admin only)
+  apiRouter.patch("/admin/settings/site", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
+     try {
+        // Validate using the specific upsert schema
+        const validatedData = upsertSiteSettingsSchema.parse(req.body);
+        const updatedSettings = await storage.updateSiteSettings(validatedData);
+        if (!updatedSettings) return res.status(500).json({ message: "Failed to save site settings." });
+        // Return the updated settings (admin might want confirmation)
+        res.json(updatedSettings);
+    } catch (error) {
+        console.error("[API /admin/settings/site PATCH] Error:", error);
+        if (error instanceof z.ZodError) return res.status(400).json({ message: "Invalid data", errors: error.flatten().fieldErrors });
+        next(error);
+    }
   });
 
   // --- Admin Manage Home Page Content ---

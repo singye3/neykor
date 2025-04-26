@@ -7,12 +7,34 @@ import {
   testimonials,
   galleryImages,
   aboutPageContent,
-  homePageContent // Import the homePageContent table schema
+  homePageContent, // Import the homePageContent table schema
+  siteSettings
 } from "../shared/schema.ts"; // Using .ts extension
 
 async function createSampleData() {
   console.log("Starting sample data creation...");
   try {
+
+    // ==========================================
+    // Seed Site Settings (UPSERT Logic)
+    // ==========================================
+    const siteSettingsData = {
+      id: 1, // Force ID 1
+      siteName: "Sacred Bhutan Travels",
+      updatedAt: new Date()
+    };
+
+    console.log("Checking/Seeding Site Settings (ID: 1)...");
+    await db.insert(siteSettings)
+      .values(siteSettingsData)
+      .onConflictDoUpdate({
+        target: siteSettings.id,
+        set: { 
+          siteName: siteSettingsData.siteName,
+          updatedAt: new Date()
+        }
+      });
+      
     // ==========================================
     // Seed Tours
     // ==========================================

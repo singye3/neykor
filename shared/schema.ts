@@ -18,6 +18,24 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
 // ==========================================
+// NEW: Site Settings table
+// ==========================================
+export const siteSettings = pgTable("siteSettings", {
+  id: serial("id").primaryKey(), // Use ID 1 for the single entry
+  siteName: text("siteName").notNull().default("Sacred Bhutan Travels"),
+  updatedAt: timestamp("updatedAt").defaultNow(),
+});
+
+// Zod schema for validation (omit id and updatedAt for updates)
+export const upsertSiteSettingsSchema = createInsertSchema(siteSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type InsertSiteSettings = z.infer<typeof upsertSiteSettingsSchema>;
+export type SiteSettings = typeof siteSettings.$inferSelect
+
+// ==========================================
 // NEW: Home Page Content table
 // ==========================================
 export const homePageContent = pgTable("homePageContent", {

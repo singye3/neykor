@@ -15,6 +15,13 @@
       "when": 1745648252382,
       "tag": "0001_famous_luminals",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1745652842436,
+      "tag": "0002_first_bucky",
+      "breakpoints": true
     }
   ]
 }
