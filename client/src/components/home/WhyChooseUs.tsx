@@ -1,7 +1,3 @@
-// Removed bhutaneseSymbols import if icons come from props now
-// import { bhutaneseSymbols } from "@/lib/utils";
-
-// Define structure for each "why" point
 interface WhyPoint {
   icon?: string;
   title?: string;

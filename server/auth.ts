@@ -17,49 +17,50 @@ declare global {
 
 const scryptAsync = promisify(scrypt);
 
-// EXPORT this function
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
 }
 
-// Keep this function internal or export if needed elsewhere
-async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
+export async function comparePassword(supplied: string, stored: string): Promise<boolean> {
   try {
     const [hashed, salt] = stored.split(".");
     if (!hashed || !salt) {
-      console.error("Invalid stored password format.");
-      return false;
+      console.error("Invalid stored password format (missing salt).");
+      return false; // Cannot compare if format is wrong
     }
     const hashedBuf = Buffer.from(hashed, "hex");
     const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+
     if (hashedBuf.length !== suppliedBuf.length) {
+        console.warn("Password buffer length mismatch during comparison.");
         return false;
     }
     return timingSafeEqual(hashedBuf, suppliedBuf);
   } catch (error) {
     console.error("Error comparing passwords:", error);
-    return false;
+    return false; // Return false on any error during comparison
   }
 }
 
+
 export function setupAuth(app: Express): void {
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "bhutan-travel-secret-key-change-me",
-    resave: false,
-    saveUninitialized: false,
-    store: storage.sessionStore,
+    secret: process.env.SESSION_SECRET || "bhutan-travel-secret-key-change-me", // Change this in production!
+    resave: false, // Don't save session if unmodified
+    saveUninitialized: false, // Don't create session until something stored
+    store: storage.sessionStore, // Use the database-backed session store
     cookie: {
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      sameSite: 'lax'
+      maxAge: 1 * 24 * 60 * 60 * 1000, // Example: Session lasts 1 day
+      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+      httpOnly: true, // Prevent client-side JS access to cookie
+      sameSite: 'lax' // Helps mitigate CSRF attacks
     }
   };
 
   if (process.env.NODE_ENV === "production") {
-    app.set("trust proxy", 1);
+    app.set("trust proxy", 1); // Adjust number based on proxy count if needed
   }
 
   app.use(session(sessionSettings));
@@ -73,51 +74,51 @@ export function setupAuth(app: Express): void {
         if (!user) {
            return done(null, false, { message: 'Incorrect username or password.' });
         }
-        const passwordsMatch = await comparePasswords(password, user.password);
+        const passwordsMatch = await comparePassword(password, user.password);
         if (!passwordsMatch) {
             return done(null, false, { message: 'Incorrect username or password.' });
         }
-        // Pass full user object from DB to done
         return done(null, user);
       } catch (err) {
-        console.error("[Auth] Error during LocalStrategy:", err);
-        return done(err);
+        console.error("[Auth] Error during LocalStrategy verification:", err);
+        return done(err); // Pass the error to Passport
       }
     }),
   );
 
+  // --- Serialize User ---
   passport.serializeUser((user, done) => {
+    // Assume user object has an 'id' property
     done(null, (user as SelectUser).id);
   });
 
+  // --- Deserialize User ---
   passport.deserializeUser(async (id: number, done) => {
     try {
+      // Fetch the user from storage using the ID from the session
       const user = await storage.getUser(id);
-      // Pass full user object from DB to done (will be attached to req.user)
-      done(null, user || false); // Pass false if user not found
+      // If user is found, pass it to done. If not found (e.g., deleted), pass false.
+      done(null, user || false);
     } catch (err) {
       console.error("[Auth] Error during deserializeUser:", err);
-      done(err);
+      done(err); // Pass error to Passport
     }
   });
 
 } // End of setupAuth function
 
-// Middleware to verify if user is authenticated
+// --- Middleware Functions ---
 export const verifyAuthenticated = (req: Request, res: Response, next: NextFunction): void => {
   if (req.isAuthenticated()) {
-    return next();
-  }
-  res.status(401).json({ message: "Unauthorized: Authentication required." });
-};
-
-// Middleware specifically for Admin routes
-export const verifyAdmin = (req: Request, res: Response, next: NextFunction): void => {
-  if (req.isAuthenticated()) {
-     // TODO: Add role check here if you implement roles
-     return next(); // User is authenticated, proceed to the route handler
+    return next(); // User has an active session, proceed
   }
   // User is not authenticated
   res.status(401).json({ message: "Unauthorized: Authentication required." });
-  // Do NOT call next() here, as the response is sent.
+};
+
+export const verifyAdmin = (req: Request, res: Response, next: NextFunction): void => {
+  if (req.isAuthenticated()) {
+     return next();
+  }
+  res.status(401).json({ message: "Unauthorized: Admin access required." });
 };

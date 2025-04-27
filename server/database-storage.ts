@@ -4,13 +4,14 @@ import {
   users, type User, type InsertUser,
   siteSettings, type SiteSettings, type InsertSiteSettings,
   homePageContent, type HomePageContent, type InsertHomePageContent,
-  tours, type Tour, type InsertTour, type ItineraryDay, // Ensure ItineraryDay is imported
+  tours, type Tour, type InsertTour, 
   inquiries, type Inquiry, type InsertInquiry,
-  testimonials, type Testimonial, type InsertTestimonial, insertTestimonialSchema,
+  testimonials, type Testimonial, type InsertTestimonial,
   galleryImages, type GalleryImage, type InsertGalleryImage,
-  newsletterSubscribers, type NewsletterSubscriber, type InsertNewsletter,
   contactMessages, type ContactMessage, type InsertContact,
   aboutPageContent, type AboutPageContent, type InsertAboutPageContent,
+  contactPageSettings, type ContactPageSettings, type InsertContactPageSettings, 
+  galleryPageSettings, type GalleryPageSettings, type InsertGalleryPageSettings
 } from "@shared/schema";
 import { eq, sql, desc } from "drizzle-orm";
 import { db, pool } from "./db";
@@ -49,6 +50,42 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return user;
   }
+
+  // --- Implement Password Update ---
+  async updateUserPassword(userId: number, newHashedPassword: string): Promise<boolean> {
+    try {
+        const result = await db.update(users)
+            .set({ password: newHashedPassword })
+            .where(eq(users.id, userId))
+            .returning({ updatedId: users.id }); // Ask for the ID back
+
+        const success = result.length > 0;
+        if (!success) {
+             console.warn(`[Storage] Password update attempt for user ID ${userId} did not affect any rows (user likely not found).`);
+        }
+        return success;
+    } catch (error) {
+        return false; // Indicate failure
+    }
+  }
+
+  // --- Implement Username Update ---
+  async updateUserUsername(userId: number, newUsername: string): Promise<boolean> {
+    try {
+        const result = await db.update(users)
+            .set({ username: newUsername })
+            .where(eq(users.id, userId));
+
+        const success = typeof result.rowCount === 'number' && result.rowCount > 0;
+        return success;
+    } catch (error: any) {
+        if (error.code === '23505') {
+            console.warn(`[Storage] Username update failed for user ID ${userId} due to unique constraint: ${newUsername}`);
+             return false;
+        }
+        return false; // Indicate general failure
+    }
+}
 
   // ==========================================
   // Site Settings methods
@@ -111,7 +148,7 @@ export class DatabaseStorage implements IStorage {
     return updatedContent || undefined;
   }
   // ==========================================
-  // Tour methods - CORRECTED with Type Assertion
+  // Tour methods
   // ==========================================
   async getTours(): Promise<Tour[]> {
     const allTours = await db.select().from(tours);
@@ -150,11 +187,9 @@ export class DatabaseStorage implements IStorage {
 
     const [newTour] = await db
       .insert(tours)
-      // Use explicit type assertion to satisfy TS check for insert
       .values(tourDataToInsert as typeof tours.$inferInsert)
       .returning();
 
-    // Drizzle returns the parsed array. Add fallback for safety.
     return {
         ...newTour,
         itinerary: Array.isArray(newTour.itinerary) ? newTour.itinerary : []
@@ -172,14 +207,11 @@ export class DatabaseStorage implements IStorage {
 
     const [updatedTour] = await db
       .update(tours)
-      // Use explicit type assertion for the partial update object for set
       .set(updateData as Partial<typeof tours.$inferInsert>)
       .where(eq(tours.id, id))
       .returning();
 
     if (!updatedTour) return undefined;
-
-    // Drizzle returns the parsed array. Add fallback for safety.
     return {
         ...updatedTour,
         itinerary: Array.isArray(updatedTour.itinerary) ? updatedTour.itinerary : []
@@ -289,27 +321,44 @@ export class DatabaseStorage implements IStorage {
     return newImage;
   }
 
-  // --- Newsletter methods ---
-  async addNewsletterSubscriber(subscriber: InsertNewsletter): Promise<NewsletterSubscriber> {
-    const [newSubscriber] = await db
-      .insert(newsletterSubscribers)
-      .values({
-        ...subscriber,
-        createdAt: new Date()
-      })
-      .onConflictDoNothing({ target: newsletterSubscribers.email }) // Specify target for conflict
-      .returning();
+  // ==========================================
+  // Contact Page Settings methods
+  // ==========================================
+  async getContactPageSettings(): Promise<ContactPageSettings | undefined> {
+    const [settings] = await db.select().from(contactPageSettings).where(eq(contactPageSettings.id, 1));
+    return settings || undefined;
+  }
 
-    // If conflict occurred (insertion didn't happen), fetch the existing record
-    if (!newSubscriber) {
-        const [existing] = await db.select().from(newsletterSubscribers).where(eq(newsletterSubscribers.email, subscriber.email));
-        if (!existing) {
-            // This case should be rare/impossible if the conflict was due to the email
-            throw new Error("Database error: Failed to insert or find newsletter subscriber after conflict.");
-        }
-        return existing;
-    }
-    return newSubscriber;
+  async updateContactPageSettings(settingsUpdate: InsertContactPageSettings): Promise<ContactPageSettings | undefined> {
+    const { id, updatedAt, ...updateData } = settingsUpdate as any;
+    const setClause: Record<string, any> = {};
+    for (const key in updateData) { setClause[key] = sql.raw(`excluded."${key}"`); }
+    setClause.updatedAt = new Date();
+
+    const [updatedSettings] = await db.insert(contactPageSettings)
+      .values({ id: 1, ...settingsUpdate }).onConflictDoUpdate({
+        target: contactPageSettings.id, set: setClause }).returning();
+    return updatedSettings || undefined;
+  }
+
+  // ==========================================
+  // Gallery Page Settings methods
+  // ==========================================
+  async getGalleryPageSettings(): Promise<GalleryPageSettings | undefined> {
+    const [settings] = await db.select().from(galleryPageSettings).where(eq(galleryPageSettings.id, 1));
+    return settings || undefined;
+  }
+
+  async updateGalleryPageSettings(settingsUpdate: InsertGalleryPageSettings): Promise<GalleryPageSettings | undefined> {
+    const { id, updatedAt, ...updateData } = settingsUpdate as any;
+    const setClause: Record<string, any> = {};
+    for (const key in updateData) { setClause[key] = sql.raw(`excluded."${key}"`); }
+    setClause.updatedAt = new Date();
+
+    const [updatedSettings] = await db.insert(galleryPageSettings)
+      .values({ id: 1, ...settingsUpdate }).onConflictDoUpdate({
+        target: galleryPageSettings.id, set: setClause }).returning();
+    return updatedSettings || undefined;
   }
 
   // --- Contact methods ---

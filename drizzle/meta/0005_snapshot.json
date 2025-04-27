@@ -1,0 +1,919 @@
+{
+  "id": "96745fe5-f858-45b4-96f3-7cd38fdd911f",
+  "prevId": "0b04e7e3-44ce-461e-8ed1-89e65034cdd8",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.aboutPageContent": {
+      "name": "aboutPageContent",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "mainHeading": {
+          "name": "mainHeading",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Our Sacred Journey'"
+        },
+        "imageUrl": {
+          "name": "imageUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "imageAlt": {
+          "name": "imageAlt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Bhutanese Guide'"
+        },
+        "historyText": {
+          "name": "historyText",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "missionText": {
+          "name": "missionText",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "philosophyHeading": {
+          "name": "philosophyHeading",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Our Philosophy'"
+        },
+        "philosophyQuote": {
+          "name": "philosophyQuote",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "value1Title": {
+          "name": "value1Title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Authenticity'"
+        },
+        "value1Text": {
+          "name": "value1Text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "value2Title": {
+          "name": "value2Title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Respect'"
+        },
+        "value2Text": {
+          "name": "value2Text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "value3Title": {
+          "name": "value3Title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Knowledge'"
+        },
+        "value3Text": {
+          "name": "value3Text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.contactMessages": {
+      "name": "contactMessages",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subject": {
+          "name": "subject",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "handled": {
+          "name": "handled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.contactPageSettings": {
+      "name": "contactPageSettings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "pageHeading": {
+          "name": "pageHeading",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Begin Your Journey'"
+        },
+        "locationHeading": {
+          "name": "locationHeading",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Our Location'"
+        },
+        "locationImageURL": {
+          "name": "locationImageURL",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "locationImageAlt": {
+          "name": "locationImageAlt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Mountains of Bhutan'"
+        },
+        "locationImageCaption": {
+          "name": "locationImageCaption",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Our sanctuary in the heart of Thimphu...'"
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Near Memorial Chorten, Thimphu, Kingdom of Bhutan'"
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pilgrimages@sacredbhutantravels.bt'"
+        },
+        "phone": {
+          "name": "phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'+975 2 333 444'"
+        },
+        "officeHoursHeading": {
+          "name": "officeHoursHeading",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Office Hours'"
+        },
+        "officeHoursText": {
+          "name": "officeHoursText",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Monday to Friday: 9:00 AM - 5:00 PM (Bhutan Standard Time)'"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.galleryImages": {
+      "name": "galleryImages",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "caption": {
+          "name": "caption",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.galleryPageSettings": {
+      "name": "galleryPageSettings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "pageHeading": {
+          "name": "pageHeading",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Sacred Visions'"
+        },
+        "pageParagraph": {
+          "name": "pageParagraph",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Explore our visual chronicle...'"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.homePageContent": {
+      "name": "homePageContent",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "heroImageURL": {
+          "name": "heroImageURL",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "heroImageAlt": {
+          "name": "heroImageAlt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Ancient Bhutanese Temple'"
+        },
+        "heroHeadingLine1": {
+          "name": "heroHeadingLine1",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Walk the Ancient Paths:'"
+        },
+        "heroHeadingLine2": {
+          "name": "heroHeadingLine2",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Bhutan Pilgrimage Through the Ages'"
+        },
+        "heroParagraph": {
+          "name": "heroParagraph",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Discover pilgrimages steeped in history...'"
+        },
+        "heroButtonText": {
+          "name": "heroButtonText",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Explore Our Sacred Routes'"
+        },
+        "introHeading": {
+          "name": "introHeading",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Ancient Tradition, Timeless Journey'"
+        },
+        "introParagraph1": {
+          "name": "introParagraph1",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Sacred Bhutan Travels invites you...'"
+        },
+        "introParagraph2": {
+          "name": "introParagraph2",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Each pilgrimage follows routes...'"
+        },
+        "featuredHeading": {
+          "name": "featuredHeading",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Our Sacred Journeys'"
+        },
+        "featuredMapURL": {
+          "name": "featuredMapURL",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "featuredMapAlt": {
+          "name": "featuredMapAlt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Vintage-style map of Bhutan'"
+        },
+        "featuredMapCaption": {
+          "name": "featuredMapCaption",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Ancient cartography revealing...'"
+        },
+        "featuredButtonText": {
+          "name": "featuredButtonText",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'View All Pilgrimages'"
+        },
+        "carouselHeading": {
+          "name": "carouselHeading",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Moments from Our Journeys'"
+        },
+        "whyHeading": {
+          "name": "whyHeading",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Why Journey With Us'"
+        },
+        "why1Icon": {
+          "name": "why1Icon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'☸'"
+        },
+        "why1Title": {
+          "name": "why1Title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Guardians of Tradition'"
+        },
+        "why1Text": {
+          "name": "why1Text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Our guides are descendants...'"
+        },
+        "why2Icon": {
+          "name": "why2Icon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'📜'"
+        },
+        "why2Title": {
+          "name": "why2Title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Deep Historical Knowledge'"
+        },
+        "why2Text": {
+          "name": "why2Text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Each journey is enriched...'"
+        },
+        "why3Icon": {
+          "name": "why3Icon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'🤝'"
+        },
+        "why3Title": {
+          "name": "why3Title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Authentic Encounters'"
+        },
+        "why3Text": {
+          "name": "why3Text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'We create meaningful connections...'"
+        },
+        "testimonialsHeading": {
+          "name": "testimonialsHeading",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Pilgrim Chronicles'"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.inquiries": {
+      "name": "inquiries",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tourId": {
+          "name": "tourId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tourName": {
+          "name": "tourName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "handled": {
+          "name": "handled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.newsletterSubscribers": {
+      "name": "newsletterSubscribers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "newsletterSubscribers_email_unique": {
+          "name": "newsletterSubscribers_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.session": {
+      "name": "session",
+      "schema": "",
+      "columns": {
+        "sid": {
+          "name": "sid",
+          "type": "varchar(255)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "sess": {
+          "name": "sess",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expire": {
+          "name": "expire",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.siteSettings": {
+      "name": "siteSettings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "siteName": {
+          "name": "siteName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Sacred Bhutan Travels'"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.testimonials": {
+      "name": "testimonials",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "location": {
+          "name": "location",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.tours": {
+      "name": "tours",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "longDescription": {
+          "name": "longDescription",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "location": {
+          "name": "location",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "duration": {
+          "name": "duration",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "difficulty": {
+          "name": "difficulty",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "accommodation": {
+          "name": "accommodation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "groupSize": {
+          "name": "groupSize",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price": {
+          "name": "price",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "imageType": {
+          "name": "imageType",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "itinerary": {
+          "name": "itinerary",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "featured": {
+          "name": "featured",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        }
+      },
+      "indexes": {
+        "location_idx": {
+          "name": "location_idx",
+          "columns": [
+            {
+              "expression": "location",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_username_unique": {
+          "name": "users_username_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "username"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

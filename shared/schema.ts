@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, index, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -16,6 +16,21 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+// ---Schema for Password Change ---
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, { message: "Current password is required" }),
+  newPassword: z.string().min(6, { message: "New password must be at least 6 characters long" }),
+});
+
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+
+// --- Schema for Username Change ---
+export const changeUsernameSchema = z.object({
+  newUsername: z.string().min(3, { message: "New username must be at least 3 characters long"}),
+  currentPassword: z.string().min(1, { message: "Current password is required to change username" }),
+});
+export type ChangeUsernameInput = z.infer<typeof changeUsernameSchema>;
 
 // ==========================================
 // NEW: Site Settings table
@@ -98,15 +113,21 @@ export const tours = pgTable("tours", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   longDescription: text("longDescription").notNull(),
-  duration: text("duration").notNull(), // e.g. "7 Days / 6 Nights"
-  difficulty: text("difficulty").notNull(), // Easy, Moderate, Challenging
+  location: text("location").notNull(),
+  duration: text("duration").notNull(),
+  difficulty: text("difficulty").notNull(),
   accommodation: text("accommodation").notNull(),
   groupSize: text("groupSize").notNull(),
-  price: integer("price").notNull(), // in USD
-  imageType: text("imageType"), // For frontend reference
+  price: integer("price").notNull(),
+  imageType: text("imageType"),
   itinerary: json("itinerary").notNull().$type<ItineraryDay[]>(),
   featured: boolean("featured").default(false),
-});
+},
+(table) => {
+  return [
+    index("location_idx").on(table.location),
+  ];
+}); // End of pgTable definition
 
 export interface ItineraryDay {
   day: number;
@@ -120,6 +141,12 @@ export const insertTourSchema = createInsertSchema(tours).omit({
 
 export type InsertTour = z.infer<typeof insertTourSchema>;
 export type Tour = typeof tours.$inferSelect;
+
+export const sessions = pgTable("session", {
+  sid: varchar("sid", { length: 255 }).primaryKey(), // Session ID
+  sess: text("sess").notNull(),                   // Session data (often JSON as text)
+  expire: timestamp("expire", { mode: 'date', withTimezone: true }).notNull() // Expiry timestamp
+});
 
 // Inquiries table
 export const inquiries = pgTable("inquiries", {
@@ -171,29 +198,16 @@ export const insertGalleryImageSchema = createInsertSchema(galleryImages).omit({
 export type InsertGalleryImage = z.infer<typeof insertGalleryImageSchema>;
 export type GalleryImage = typeof galleryImages.$inferSelect;
 
-// Newsletter subscribers
-export const newsletterSubscribers = pgTable("newsletterSubscribers", {
-  id: serial("id").primaryKey(),
-  email: text("email").notNull().unique(),
-  createdAt: timestamp("createdAt").defaultNow(),
-});
-
-export const insertNewsletterSchema = createInsertSchema(newsletterSubscribers).pick({
-  email: true,
-});
-
-export type InsertNewsletter = z.infer<typeof insertNewsletterSchema>;
-export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
-
-// Contact messages
+// Contact Form
 export const contactMessages = pgTable("contactMessages", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull(),
+  phone: text("phone"),
   subject: text("subject").notNull(),
   message: text("message").notNull(),
   handled: boolean("handled").default(false),
-  createdAt: timestamp("createdAt").defaultNow(),
+  createdAt: timestamp("createdAt", { mode: 'date', withTimezone: true }).defaultNow(), // Added mode and timezone for clarity
 });
 
 export const insertContactSchema = createInsertSchema(contactMessages).omit({
@@ -235,3 +249,36 @@ export const upsertAboutPageContentSchema = createInsertSchema(aboutPageContent)
 
 export type InsertAboutPageContent = z.infer<typeof upsertAboutPageContentSchema>;
 export type AboutPageContent = typeof aboutPageContent.$inferSelect;
+
+// ==========================================
+// Contact Page Settings table
+// ==========================================
+export const contactPageSettings = pgTable("contactPageSettings", {
+  id: serial("id").primaryKey(), // ID 1
+  pageHeading: text("pageHeading").notNull().default("Begin Your Journey"),
+  locationHeading: text("locationHeading").notNull().default("Our Location"),
+  address: text("address").notNull().default("Near Memorial Chorten, Thimphu, Kingdom of Bhutan"),
+  email: text("email").notNull().default("pilgrimages@sacredbhutantravels.bt"),
+  phone: text("phone").notNull().default("+975 2 333 444"),
+  officeHoursHeading: text("officeHoursHeading").notNull().default("Office Hours"),
+  officeHoursText: text("officeHoursText").notNull().default("Monday to Friday: 9:00 AM - 5:00 PM (Bhutan Standard Time)"),
+  updatedAt: timestamp("updatedAt").defaultNow(),
+});
+
+export const upsertContactPageSettingsSchema = createInsertSchema(contactPageSettings).omit({ id: true, updatedAt: true });
+export type InsertContactPageSettings = z.infer<typeof upsertContactPageSettingsSchema>;
+export type ContactPageSettings = typeof contactPageSettings.$inferSelect;
+
+// ==========================================
+// Gallery Page Settings table
+// ==========================================
+export const galleryPageSettings = pgTable("galleryPageSettings", {
+  id: serial("id").primaryKey(), // ID 1
+  pageHeading: text("pageHeading").notNull().default("Sacred Visions"),
+  pageParagraph: text("pageParagraph").notNull().default("Explore our visual chronicle..."),
+  updatedAt: timestamp("updatedAt").defaultNow(),
+});
+
+export const upsertGalleryPageSettingsSchema = createInsertSchema(galleryPageSettings).omit({ id: true, updatedAt: true });
+export type InsertGalleryPageSettings = z.infer<typeof upsertGalleryPageSettingsSchema>;
+export type GalleryPageSettings = typeof galleryPageSettings.$inferSelect;

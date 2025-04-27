@@ -22,6 +22,41 @@
       "when": 1745652842436,
       "tag": "0002_first_bucky",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1745692808656,
+      "tag": "0003_grey_madame_hydra",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1745700390124,
+      "tag": "0004_married_the_hunter",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1745701741946,
+      "tag": "0005_loose_guardsmen",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1745740026654,
+      "tag": "0006_wild_hitman",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1745741955818,
+      "tag": "0007_tense_oracle",
+      "breakpoints": true
     }
   ]
 }

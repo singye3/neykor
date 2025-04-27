@@ -8,7 +8,9 @@ import {
   galleryImages,
   aboutPageContent,
   homePageContent, // Import the homePageContent table schema
-  siteSettings
+  siteSettings,
+  galleryPageSettings,
+  contactPageSettings
 } from "../shared/schema.ts"; // Using .ts extension
 
 async function createSampleData() {
@@ -23,8 +25,6 @@ async function createSampleData() {
       siteName: "Sacred Bhutan Travels",
       updatedAt: new Date()
     };
-
-    console.log("Checking/Seeding Site Settings (ID: 1)...");
     await db.insert(siteSettings)
       .values(siteSettingsData)
       .onConflictDoUpdate({
@@ -40,60 +40,10 @@ async function createSampleData() {
     // ==========================================
     const tourData = [
       {
-        title: "Tiger's Nest Pilgrimage",
-        description: "Follow the sacred path to Paro Taktsang, where Guru Rinpoche meditated.",
-        longDescription: "The journey to Paro Taktsang (Tiger's Nest) follows in the footsteps of Guru Rinpoche, who brought Buddhism to Bhutan in the 8th century. Legend tells that he flew to this precipitous cliff on the back of a tigress.",
-        duration: "7 Days / 6 Nights",
-        difficulty: "Moderate",
-        accommodation: "Heritage hotels and traditional farmhouses",
-        groupSize: "Maximum 12 pilgrims",
-        price: 2850,
-        imageType: "tigerNest",
-        itinerary: [
-          { day: 1, title: "Arrival in Paro", description: "Traditional welcome ceremony at your heritage accommodation. Evening prayers at Kyichu Lhakhang." },
-          { day: 2, title: "Drukgyel Dzong & Preparation", description: "Visit the ruins of Drukgyel Dzong. Afternoon meeting with a Buddhist scholar." },
-          { day: 3, title: "Tiger's Nest Pilgrimage", description: "Pre-dawn blessing ceremony, followed by the ascent to Taktsang. Meditation and prayers." }
-        ] as ItineraryDay[], // Type assertion for clarity
-        featured: true
-      },
-      {
-        title: "Bumthang Sacred Circuit",
-        description: "Journey through Bhutan's spiritual heartland, visiting ancient temples.",
-        longDescription: "Bumthang Valley is considered the spiritual heart of Bhutan, home to some of the oldest Buddhist temples and monasteries. This journey takes you through four valleys.",
-        duration: "10 Days / 9 Nights",
-        difficulty: "Moderate",
-        accommodation: "Heritage lodges and monastery guesthouses",
-        groupSize: "Maximum 10 pilgrims",
-        price: 3200,
-        imageType: "bumthang",
-        itinerary: [
-          { day: 1, title: "Arrival in Paro and Transfer to Thimphu", description: "Welcome ceremony and transfer to capital. Visit Great Buddha Dordenma." },
-          { day: 2, title: "Journey to Punakha", description: "Cross the Dochula Pass with its 108 chortens. Visit Chimi Lhakhang." },
-          { day: 3, title: "Trongsa and Arrival in Bumthang", description: "Visit the impressive Trongsa Dzong. Continue to Bumthang." }
-        ] as ItineraryDay[],
-        featured: true
-      },
-      {
-        title: "Druk Path Trek",
-        description: "Walk the ancient mountain route connecting Paro and Thimphu.",
-        longDescription: "The Druk Path is one of Bhutan's classic treks, following an ancient trading route. This journey takes you through stunning landscapes.",
-        duration: "5 Days / 4 Nights",
-        difficulty: "Challenging",
-        accommodation: "Traditional camping and mountain huts",
-        groupSize: "Maximum 8 pilgrims",
-        price: 1950,
-        imageType: "drukPath",
-        itinerary: [
-          { day: 1, title: "Paro to Jele Dzong", description: "Begin with a blessing at Paro Dzong, ascend through pine forests to Jele Dzong." },
-          { day: 2, title: "Jele Dzong to Jangchulakha", description: "Trek along ridge lines with views of Mount Chomolhari. Pass through rhododendron forests." },
-          { day: 3, title: "Jangchulakha to Jimilang Tsho", description: "Hike to the sacred Jimilang Tsho (Sand Ox Lake)." }
-        ] as ItineraryDay[],
-        featured: true
-      },
-      {
-        title: "Haa Valley Heritage",
+        title: "Singye Valley Heritage",
         description: "Explore the pristine Haa Valley, known for its unique traditions.",
         longDescription: "Discover the lesser-visited Haa Valley, offering a glimpse into traditional Bhutanese life and spirituality away from the main tourist trails.",
+        location: "Paro",
         duration: "6 Days / 5 Nights",
         difficulty: "Easy",
         accommodation: "Farmhouses and local guesthouses",
@@ -265,9 +215,57 @@ async function createSampleData() {
           updatedAt: new Date() // Ensure timestamp is updated
         }
       });
-    console.log(" -> Home Page Content seeded/updated successfully!");
+    // ==========================================
+    // Seed Contact Page Settings (UPSERT Logic) <-- NEW
+    // ==========================================
+    const contactSettingsData = {
+      id: 1, // Force ID 1
+      pageHeading: "Begin Your Journey",
+      locationHeading: "Our Location",
+      locationImageURL: "https://ik.imagekit.io/neykor/bhutan_mountains_contact.jpg", // REPLACE with your actual default image URL
+      locationImageAlt: "View of Himalayan peaks in Bhutan",
+      locationImageCaption: "Our main coordination office nestled near the Memorial Chorten, Thimphu.",
+      address: "Norzin Lam III, Near Memorial Chorten, Thimphu, Kingdom of Bhutan",
+      email: "connect@sacredbhutantravels.bt", // Example email
+      phone: "+975 17 11 22 33", // Example phone
+      officeHoursHeading: "Correspondence Hours",
+      officeHoursText: "Monday to Friday: 9:00 AM - 5:00 PM (Bhutan Standard Time, GMT+6)",
+      updatedAt: new Date()
+    };
 
+    await db.insert(contactPageSettings).values(contactSettingsData).onConflictDoUpdate({
+      target: contactPageSettings.id, // Conflict on ID
+      set: { // Explicitly list fields to update
+        pageHeading: contactSettingsData.pageHeading,
+        locationHeading: contactSettingsData.locationHeading,
+        address: contactSettingsData.address,
+        email: contactSettingsData.email,
+        phone: contactSettingsData.phone,
+        officeHoursHeading: contactSettingsData.officeHoursHeading,
+        officeHoursText: contactSettingsData.officeHoursText,
+        updatedAt: new Date() // Update timestamp
+      }
+    });
 
+    // ==========================================
+    // Seed Gallery Page Settings (UPSERT Logic) <-- NEW
+    // ==========================================
+    const gallerySettingsData = {
+      id: 1, // Force ID 1
+      pageHeading: "Sacred Visions",
+      pageParagraph: "Explore our visual chronicle of Bhutan's sacred landscapes, ancient temples, vibrant ceremonies, and the timeless beauty of the Dragon Kingdom. Each image captures a moment of reverence and wonder along the pilgrim's path.",
+      // gridHeading: "Glimpses of the Ancient Kingdom", // Uncomment and set if added to schema
+      updatedAt: new Date()
+    };
+
+    await db.insert(galleryPageSettings).values(gallerySettingsData).onConflictDoUpdate({
+      target: galleryPageSettings.id, // Conflict on ID
+      set: { // Explicitly list fields to update
+        pageHeading: gallerySettingsData.pageHeading,
+        pageParagraph: gallerySettingsData.pageParagraph,
+        updatedAt: new Date() // Update timestamp
+      }
+    });
     console.log("\nAll sample data seeding checks complete!");
 
   } catch (error) {
@@ -281,3 +279,4 @@ createSampleData().then(() => {
   console.log("Sample data script finished successfully.");
   process.exit(0); // Exit successfully
 });
+

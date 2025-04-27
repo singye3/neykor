@@ -1,4 +1,4 @@
-/* src/app/globals.css (or your main CSS file) */
+/* src/app/index.css */
 
 @tailwind base;
 @tailwind components;
@@ -39,8 +39,6 @@
     --color-parchment-dark: 43 30% 85%;
   }
 
-  /* Define dark mode variables if needed */
-  /* .dark { ... } */
 }
 
 @layer base {

@@ -1,28 +1,37 @@
 // server/routes.ts
 
-import express, { Router, Request, Response, NextFunction } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { storage } from "./database-storage";
-// Import hashPassword and middleware from auth.ts
-import { verifyAdmin, verifyAuthenticated, hashPassword } from "./auth";
+import { verifyAdmin, hashPassword, comparePassword } from "./auth";
 import { z } from "zod";
 import {
+  changePasswordSchema,
   insertInquirySchema,
-  insertNewsletterSchema,
   insertContactSchema,
   upsertAboutPageContentSchema,
-  insertTourSchema,
   insertTestimonialSchema,
   upsertHomePageContentSchema,
   upsertSiteSettingsSchema,
+  upsertContactPageSettingsSchema,
+  upsertGalleryPageSettingsSchema,
+  changeUsernameSchema
 } from "@shared/schema";
 
 // ImageKit Imports
 import dotenv from 'dotenv';
 import ImageKit from 'imagekit';
 import type { FileObject as IKFileObject } from 'imagekit/dist/libs/interfaces';
+import { uploadImageToFolder } from "./imagekit-helper.ts";
+import multer from 'multer';
 import passport from "passport"; // Needed for authenticate
 
 dotenv.config();
+
+// Configure multer for memory storage (process file buffer in memory)
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 } // Limit file size (e.g., 5MB)
+});
 
 // Initialize ImageKit SDK
 let imagekit: ImageKit | null = null;
@@ -49,7 +58,7 @@ export function configureApiRouter(): Router {
   // --- ImageKit Carousel Images ---
   apiRouter.get("/carousel-images", async (req: Request, res: Response, next: NextFunction) => {
       if (!imagekit) return next(new Error('ImageKit service not configured...'));
-      const folderPath = '/Tiger Nest/';
+      const folderPath = '/uploads/carousel/';
       try {
           const listResult = await imagekit.listFiles({ path: folderPath });
           const fileObjects = listResult.filter((item): item is IKFileObject => item.type === 'file');
@@ -63,43 +72,28 @@ export function configureApiRouter(): Router {
     try {
       let settings = await storage.getSiteSettings();
       if (!settings) {
-        console.warn("[API /settings/site GET] No settings found, returning default.");
-        settings = {
-          id: 1,
-          siteName: "Sacred Bhutan Travels (Default)",
-          updatedAt: new Date(),
-        };
+        // Minimal default settings if not found
+        settings = { id: 1, siteName: "Sacred Bhutan Travels (Default)", updatedAt: new Date() };
       }
-      // Only send necessary public settings (just siteName for now)
-      res.json({ siteName: settings.siteName });
+      res.json({ siteName: settings.siteName }); // Only public info
     } catch (error) {
       console.error("[API /settings/site GET] Error:", error);
       next(error);
     }
   });
 
-
   // --- Home Page Content (Public GET) ---
   apiRouter.get("/content/home", async (req: Request, res: Response, next: NextFunction) => {
     try {
       let content = await storage.getHomePageContent();
       if (!content) {
-        console.warn("[API /content/home GET] No content found, returning default structure.");
-        // Provide a default structure matching HomePageContent
+         // Provide a minimal default structure if needed
         content = {
-           id: 1,
-           heroImageURL: "DEFAULT_HERO_URL", heroImageAlt: "Default Alt",
-           heroHeadingLine1: "Default Heading 1", heroHeadingLine2: "Default Heading 2",
-           heroParagraph: "Default paragraph.", heroButtonText: "Default Button",
-           introHeading: "Default Intro Heading", introParagraph1: "Default P1", introParagraph2: "Default P2",
-           featuredHeading: "Default Featured Heading", featuredMapURL: "DEFAULT_MAP_URL",
-           featuredMapAlt: "Default Map Alt", featuredMapCaption: "Default Map Caption", featuredButtonText: "Default Button",
-           carouselHeading: "Default Carousel Heading", whyHeading: "Default Why Heading",
-           why1Icon: "?", why1Title: "Default Title 1", why1Text: "Default Text 1",
-           why2Icon: "?", why2Title: "Default Title 2", why2Text: "Default Text 2",
-           why3Icon: "?", why3Title: "Default Title 3", why3Text: "Default Text 3",
-           testimonialsHeading: "Default Testimonials Heading",
-           updatedAt: new Date(),
+           id: 1, heroImageURL: "", heroImageAlt: "", heroHeadingLine1: "Welcome", heroHeadingLine2: "",
+           heroParagraph: "", heroButtonText: "", introHeading: "", introParagraph1: "", introParagraph2: "",
+           featuredHeading: "", featuredMapURL: "", featuredMapAlt: "", featuredMapCaption: "", featuredButtonText: "",
+           carouselHeading: "", whyHeading: "", why1Icon: "", why1Title: "", why1Text: "", why2Icon: "", why2Title: "",
+           why2Text: "", why3Icon: "", why3Title: "", why3Text: "", testimonialsHeading: "", updatedAt: new Date(),
         };
       }
       res.json(content);
@@ -110,48 +104,62 @@ export function configureApiRouter(): Router {
   });
 
   // --- About Page Content ---
- apiRouter.get("/content/about", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    let content = await storage.getAboutPageContent();
-    if (!content) {
-      console.warn("[API /content/about GET] No content found in DB, returning default structure.");
-      content = { // Ensure this matches the AboutPageContent type structure
-        id: 1,
-        mainHeading: "Our Sacred Journey (Default)",
-        imageUrl: "https://via.placeholder.com/600x400.png?text=Default+Image", // Placeholder
-        imageAlt: "Default placeholder image",
-        historyText: "Default history text. Please update in admin panel.",
-        missionText: "Default mission text. Please update in admin panel.",
-        philosophyHeading: "Our Philosophy (Default)",
-        philosophyQuote: "Default philosophy quote. Please update in admin panel.",
-        value1Title: "Value 1 (Default)", value1Text: "Default value 1 text.",
-        value2Title: "Value 2 (Default)", value2Text: "Default value 2 text.",
-        value3Title: "Value 3 (Default)", value3Text: "Default value 3 text.",
-        updatedAt: new Date()
-      };
+  apiRouter.get("/content/about", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      let content = await storage.getAboutPageContent();
+      if (!content) {
+         // Minimal default structure
+        content = {
+          id: 1, mainHeading: "About Us", imageUrl: "", imageAlt: "", historyText: "", missionText: "",
+          philosophyHeading: "", philosophyQuote: "", value1Title: "", value1Text: "", value2Title: "",
+          value2Text: "", value3Title: "", value3Text: "", updatedAt: new Date()
+        };
+      }
+      res.json(content);
+    } catch (error) {
+      console.error("[API /content/about GET] Error:", error);
+      next(error);
     }
-    res.json(content);
-  } catch (error) {
-    console.error("[API /content/about GET] Error:", error);
-    next(error);
-  }
-});
+  });
 
   // --- Tours ---
+  // GET /tours endpoint supporting optional location filtering
   apiRouter.get("/tours", async (req: Request, res: Response, next: NextFunction) => {
-      try { res.json(await storage.getTours()); } catch (error) { console.error("[API /tours GET] Error:", error); next(error); }
+    const location = req.query.location as string | undefined;
+    try {
+      // **IMPORTANT:** Assumes `storage.getTours` accepts an optional filter object
+      const filters: { location?: string } = {};
+      if (location && typeof location === 'string' && location.trim() !== '') {
+        filters.location = location.trim();
+      }
+      const tours = await storage.getTours(filters);
+      res.json(tours);
+    } catch (error) {
+      console.error(`[API /tours GET] Error fetching tours (Location: ${location || 'None'}):`, error);
+      next(error);
+    }
   });
+
   apiRouter.get("/tours/featured", async (req: Request, res: Response, next: NextFunction) => {
-      try { res.json(await storage.getFeaturedTours()); } catch (error) { console.error("[API /tours/featured GET] Error:", error); next(error); }
+    try {
+      res.json(await storage.getFeaturedTours());
+    } catch (error) {
+      console.error("[API /tours/featured GET] Error:", error);
+      next(error);
+    }
   });
+
   apiRouter.get("/tours/:id", async (req: Request, res: Response, next: NextFunction) => {
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) return res.status(400).json({ message: "Invalid tour ID format" });
-      try {
-          const tour = await storage.getTour(id);
-          if (!tour) return res.status(404).json({ message: "Tour not found" });
-          res.json(tour);
-      } catch (error) { console.error(`[API /tours/${id} GET] Error:`, error); next(error); }
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid tour ID format" });
+    try {
+        const tour = await storage.getTour(id);
+        if (!tour) return res.status(404).json({ message: "Tour not found" });
+        res.json(tour);
+    } catch (error) {
+      console.error(`[API /tours/${id} GET] Error:`, error);
+      next(error);
+    }
   });
 
   // --- Testimonials ---
@@ -162,11 +170,24 @@ export function configureApiRouter(): Router {
        console.error("[API /testimonials GET] Error:", error);
        next(error);
     }
-});
+  });
 
   // --- Gallery Images ---
-  apiRouter.get("/gallery", async (req: Request, res: Response, next: NextFunction) => {
-      try { res.json(await storage.getGalleryImages()); } catch (error) { console.error("[API /gallery GET] Error:", error); next(error); }
+  apiRouter.get("/gallery/images", async (req: Request, res: Response, next: NextFunction) => {
+    const targetFolder = "/uploads/gallery/";
+    if (!imagekit) return next(new Error('ImageKit service is not available.'));
+    try {
+      const listResult = await imagekit.listFiles({ path: targetFolder });
+      const imageFiles = listResult.filter((item): item is IKFileObject => item.type === 'file');
+      const galleryData = imageFiles.map(file => ({
+        id: file.fileId, url: file.url, thumbnailUrl: file.thumbnail, name: file.name,
+        filePath: file.filePath, height: file.height, width: file.width, size: file.size,
+      }));
+      res.json(galleryData);
+    } catch (error) {
+      console.error(`[API /gallery/images] Error listing files from ${targetFolder}:`, error);
+      next(error);
+    }
   });
 
   // --- Tour Inquiries ---
@@ -183,25 +204,11 @@ export function configureApiRouter(): Router {
       }
   });
 
-  // --- Newsletter Subscription ---
-  apiRouter.post("/newsletter", async (req: Request, res: Response, next: NextFunction) => {
-       try {
-          const validatedData = insertNewsletterSchema.parse(req.body);
-          const subscriber = await storage.addNewsletterSubscriber(validatedData);
-          res.status(201).json({ message: "Subscription successful.", email: subscriber.email });
-      } catch (error: any) {
-          console.error("[API /newsletter POST] Error:", error);
-          if (error instanceof z.ZodError) return res.status(400).json({ message: "Invalid email format", errors: error.flatten().fieldErrors });
-          if (error.code === '23505') return res.status(409).json({ message: "This email is already subscribed." });
-          next(error);
-      }
-  });
-
   // --- Contact Form Submission ---
   apiRouter.post("/contact", async (req: Request, res: Response, next: NextFunction) => {
        try {
           const validatedData = insertContactSchema.parse(req.body);
-          await storage.createContactMessage(validatedData); // Don't need to return the message content
+          await storage.createContactMessage(validatedData);
           res.status(201).json({ message: "Message received successfully." });
       } catch (error) {
           console.error("[API /contact POST] Error:", error);
@@ -210,11 +217,45 @@ export function configureApiRouter(): Router {
       }
   });
 
+  // --- Contact Page Content (Public GET) ---
+  apiRouter.get("/content/contact", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      let settings = await storage.getContactPageSettings();
+      if (!settings) {
+         // Minimal default
+        settings = {
+          id: 1, pageHeading: "Contact Us", locationHeading: "", address: "", email: "",
+          phone: "", officeHoursHeading: "", officeHoursText: "", updatedAt: new Date()
+        };
+      }
+      res.json(settings);
+    } catch (error) {
+      console.error("[API /content/contact GET] Error:", error);
+      next(error);
+     }
+  });
+
+  // --- Gallery Page Content (Public GET) ---
+  apiRouter.get("/content/gallery", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      let settings = await storage.getGalleryPageSettings();
+      if (!settings) {
+         // Minimal default
+        settings = { id: 1, pageHeading: "Gallery", pageParagraph: "", updatedAt: new Date() };
+      }
+      res.json(settings);
+    } catch (error) {
+      console.error("[API /content/gallery GET] Error:", error);
+      next(error);
+    }
+  });
+
   // --- User Auth Routes (Session Check, Login, Register, Logout) ---
   apiRouter.get("/user", (req: Request, res: Response) => {
     if (!req.isAuthenticated() || !req.user) {
         return res.status(200).json(null);
     }
+    // Ensure password is not sent
     const { password: _, ...userWithoutPassword } = req.user;
     res.status(200).json(userWithoutPassword);
   });
@@ -233,20 +274,21 @@ export function configureApiRouter(): Router {
 
   apiRouter.post("/register", async (req: Request, res: Response, next: NextFunction) => {
        const { username, password } = req.body;
+       // Basic input checks
        if (!username || typeof username !== 'string' || username.length < 3) return res.status(400).json({ message: "Username must be at least 3 characters." });
        if (!password || typeof password !== 'string' || password.length < 6) return res.status(400).json({ message: "Password must be at least 6 characters." });
        try {
           const existingUser = await storage.getUserByUsername(username);
           if (existingUser) return res.status(409).json({ message: "Username already exists" });
 
-          // Use the imported hashPassword function
           const hashedPassword = await hashPassword(password);
-
           const newUser = await storage.createUser({ username, password: hashedPassword });
 
+          // Log user in automatically after successful registration
           req.login(newUser, (err) => {
             if (err) {
                 console.error("[API /register] Login after register failed:", err);
+                // Still successful registration, just inform user to login manually
                 return res.status(201).json({ message: "Registration successful, please log in." });
             }
             const { password: _, ...userWithoutPassword } = newUser;
@@ -263,7 +305,7 @@ export function configureApiRouter(): Router {
         if (err) return next(err);
         req.session.destroy((destroyErr) => {
             if (destroyErr) console.error("[API /logout] Error destroying session:", destroyErr);
-            res.clearCookie('connect.sid');
+            res.clearCookie('connect.sid'); // Use the default session cookie name
             res.status(200).json({ message: "Logout successful" });
         });
       });
@@ -274,10 +316,79 @@ export function configureApiRouter(): Router {
   // ADMIN API ROUTES (Apply verifyAdmin middleware)
   // ==========================================
 
+  // Admin Change Own Password ---
+  apiRouter.patch("/admin/user/password", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+        const userId = req.user?.id;
+        if (!userId) {
+            return res.status(401).json({ message: "Authentication error: User ID not found." });
+        }
+
+        const currentUser = await storage.getUser(userId);
+        if (!currentUser || !currentUser.password) {
+            return res.status(404).json({ message: "Admin user not found or password data missing." });
+        }
+        const isMatch = await comparePassword(currentPassword, currentUser.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: "Incorrect current password." });
+        }
+        const newHashedPassword = await hashPassword(newPassword);
+        const updateSuccess = await storage.updateUserPassword(userId, newHashedPassword);
+
+        if (!updateSuccess) {
+            return res.status(500).json({ message: "Failed to update password in database." });
+        }
+        res.status(200).json({ message: "Password updated successfully." });
+
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ message: "Invalid data provided.", errors: error.flatten().fieldErrors });
+        }
+        next(error);
+    }
+  });
+
+  // --- Admin Change Own Username ---
+  apiRouter.patch("/admin/user/username", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { newUsername, currentPassword } = changeUsernameSchema.parse(req.body);
+        const userId = req.user?.id;
+        if (!userId) {
+            return res.status(401).json({ message: "Authentication error: User ID not found." });
+        }
+        const currentUser = await storage.getUser(userId);
+        if (!currentUser || !currentUser.password) {
+            return res.status(404).json({ message: "Admin user not found or password data missing." });
+        }
+        const isPasswordMatch = await comparePassword(currentPassword, currentUser.password);
+        if (!isPasswordMatch) {
+            return res.status(400).json({ message: "Incorrect current password." });
+        }
+        if (newUsername === currentUser.username) {
+            return res.status(400).json({ message: "New username cannot be the same as the current username." });
+        }
+        const updateSuccess = await storage.updateUserUsername(userId, newUsername);
+
+        if (!updateSuccess) {
+             return res.status(500).json({ message: "Failed to update username. It might already be taken or another error occurred." });
+        }
+
+        res.status(200).json({ message: "Username updated successfully." });
+
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ message: "Invalid data provided.", errors: error.flatten().fieldErrors });
+        }
+        next(error);
+    }
+  });
+
   // --- Admin Stats ---
   apiRouter.get("/admin/stats", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
       try {
           const stats = await storage.getStats();
+          // Format stats for potential dashboard display
           const formattedStats = [
             { label: "Active Tours", value: stats.tours, icon: "✈️", link: "/admin/tours" },
             { label: "Unhandled Inquiries", value: stats.inquiries, icon: "✉️", link: "/admin/inquiries" },
@@ -291,11 +402,10 @@ export function configureApiRouter(): Router {
   });
 
   // --- Admin Manage Site Settings ---
-  // GET full settings for admin
   apiRouter.get("/admin/settings/site", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
     try {
       let settings = await storage.getSiteSettings();
-       if (!settings) { // Provide defaults if not seeded yet
+       if (!settings) {
           settings = { id: 1, siteName: "Sacred Bhutan Travels (Default)", updatedAt: new Date() };
        }
       res.json(settings); // Admin gets all settings
@@ -305,14 +415,11 @@ export function configureApiRouter(): Router {
     }
   });
 
-  // PATCH site settings (admin only)
   apiRouter.patch("/admin/settings/site", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
      try {
-        // Validate using the specific upsert schema
         const validatedData = upsertSiteSettingsSchema.parse(req.body);
         const updatedSettings = await storage.updateSiteSettings(validatedData);
         if (!updatedSettings) return res.status(500).json({ message: "Failed to save site settings." });
-        // Return the updated settings (admin might want confirmation)
         res.json(updatedSettings);
     } catch (error) {
         console.error("[API /admin/settings/site PATCH] Error:", error);
@@ -352,10 +459,15 @@ export function configureApiRouter(): Router {
   // --- Admin Manage Tours ---
   apiRouter.post("/tours", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
        try {
-           // TODO: Add Zod validation
-           res.status(201).json(await storage.createTour(req.body));
+           // TODO: Add Zod validation (e.g., const validatedData = insertTourSchema.parse(req.body);)
+           // Ensure validatedData includes the 'location' field
+           const validatedData = req.body; // Placeholder - Replace with actual validation
+           const newTour = await storage.createTour(validatedData);
+           res.status(201).json(newTour);
        } catch (error) {
            console.error("[API /tours POST (Admin)] Error:", error);
+           // Add Zod error handling here if validation is added
+           // if (error instanceof z.ZodError) return res.status(400).json(...)
            next(error);
        }
   });
@@ -363,12 +475,16 @@ export function configureApiRouter(): Router {
        const id = parseInt(req.params.id, 10);
        if (isNaN(id)) return res.status(400).json({ message: "Invalid tour ID format" });
        try {
-           // TODO: Add Zod validation
-           const updatedTour = await storage.updateTour(id, req.body);
+           // TODO: Add Zod validation (e.g., const validatedData = updateTourSchema.partial().parse(req.body);)
+           // Ensure validatedData includes the 'location' field if provided
+           const validatedData = req.body; // Placeholder - Replace with actual validation
+           const updatedTour = await storage.updateTour(id, validatedData);
            if (!updatedTour) return res.status(404).json({ message: "Tour not found" });
            res.json(updatedTour);
        } catch (error) {
            console.error(`[API /tours/${id} PATCH (Admin)] Error:`, error);
+            // Add Zod error handling here if validation is added
+           // if (error instanceof z.ZodError) return res.status(400).json(...)
            next(error);
        }
   });
@@ -397,6 +513,7 @@ export function configureApiRouter(): Router {
   apiRouter.patch("/inquiries/:id", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) return res.status(400).json({ message: "Invalid inquiry ID format" });
+      // Simple validation for the expected field
       if (typeof req.body.handled !== 'boolean') return res.status(400).json({ message: "Invalid body: 'handled' boolean expected." });
       try {
           const updatedInquiry = await storage.updateInquiry(id, { handled: req.body.handled });
@@ -433,6 +550,7 @@ export function configureApiRouter(): Router {
   apiRouter.patch("/admin/messages/:id", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) return res.status(400).json({ message: "Invalid message ID format" });
+      // Simple validation for the expected field
       if (typeof req.body.handled !== 'boolean') return res.status(400).json({ message: "Invalid body: 'handled' boolean expected." });
       try {
           const updatedMessage = await storage.updateContactMessage(id, { handled: req.body.handled });
@@ -456,19 +574,45 @@ export function configureApiRouter(): Router {
        }
   });
 
+  // --- Admin Image Upload ---
+  apiRouter.post(
+    "/admin/upload",
+    verifyAdmin,
+    upload.single('imageFile'), // Uses multer middleware for single file upload
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            if (!req.file) return res.status(400).json({ message: "No image file provided." });
+            if (!req.body.folderName) return res.status(400).json({ message: "Target folder name is required." });
+
+            const result = await uploadImageToFolder(
+                req.file.buffer,
+                req.file.originalname,
+                req.body.folderName,
+                true // Use original filename in ImageKit
+            );
+            // Send the full ImageKit result object back
+            res.status(201).json(result);
+
+        } catch (error) {
+            console.error("[API /admin/upload] Error:", error);
+            next(error);
+        }
+    }
+  );
+
     // --- Admin Manage Testimonials ---
     apiRouter.get("/admin/testimonials", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
         try {
             const testimonials = await storage.getTestimonials();
-            res.json(testimonials); // Attempt to send JSON
+            res.json(testimonials);
         } catch (error) {
-            next(error); // Pass error to global handler
+            console.error("[API /admin/testimonials GET] Error:", error);
+            next(error);
         }
     });
-  
+
     apiRouter.post("/admin/testimonials", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Validate incoming data using the insert schema
             const validatedData = insertTestimonialSchema.parse(req.body);
             const newTestimonial = await storage.createTestimonial(validatedData);
             res.status(201).json(newTestimonial);
@@ -482,10 +626,11 @@ export function configureApiRouter(): Router {
     });
 
     apiRouter.patch("/admin/testimonials/:id", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
-        const id = parseInt(req.params.id, 10); // Get ID from URL parameter
+        const id = parseInt(req.params.id, 10);
         if (isNaN(id)) return res.status(400).json({ message: "Invalid testimonial ID format" });
-  
+
         try {
+            // Allow partial updates
             const validatedUpdate = insertTestimonialSchema.partial().parse(req.body);
             const updatedTestimonial = await storage.updateTestimonial(id, validatedUpdate);
             if (!updatedTestimonial) {
@@ -500,7 +645,7 @@ export function configureApiRouter(): Router {
             next(error);
         }
     });
-  
+
     apiRouter.delete("/admin/testimonials/:id", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
         const id = parseInt(req.params.id, 10);
         if (isNaN(id)) return res.status(400).json({ message: "Invalid testimonial ID format" });
@@ -514,6 +659,34 @@ export function configureApiRouter(): Router {
             console.error(`[API /admin/testimonials/${id} DELETE] Error:`, error);
             next(error);
         }
+    });
+
+    // --- Admin Manage Contact Page Content ---
+    apiRouter.patch("/content/contact", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
+      try {
+         const validatedData = upsertContactPageSettingsSchema.parse(req.body);
+         const updatedSettings = await storage.updateContactPageSettings(validatedData);
+         if (!updatedSettings) return res.status(500).json({ message: "Failed to save contact page settings." });
+         res.json(updatedSettings);
+     } catch (error) {
+         console.error("[API /content/contact PATCH] Error:", error);
+         if (error instanceof z.ZodError) return res.status(400).json({ message: "Invalid data", errors: error.flatten().fieldErrors });
+         next(error);
+     }
+    });
+
+    // --- Admin Manage Gallery Page Content ---
+    apiRouter.patch("/content/gallery", verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
+       try {
+          const validatedData = upsertGalleryPageSettingsSchema.parse(req.body);
+          const updatedSettings = await storage.updateGalleryPageSettings(validatedData);
+          if (!updatedSettings) return res.status(500).json({ message: "Failed to save gallery page settings." });
+          res.json(updatedSettings);
+      } catch (error) {
+          console.error("[API /content/gallery PATCH] Error:", error);
+          if (error instanceof z.ZodError) return res.status(400).json({ message: "Invalid data", errors: error.flatten().fieldErrors });
+          next(error);
+      }
     });
 
   // Return the configured router instance

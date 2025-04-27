@@ -1,15 +1,15 @@
 // client/src/pages/Admin/AdminDashboard.tsx
 
-import { Link } from "wouter"; // For navigation
-import { useQuery } from "@tanstack/react-query"; // For data fetching
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // UI component
-import { Button } from "@/components/ui/button"; // UI component
-import { useAuth } from "@/hooks/use-auth"; // Authentication hook
-import { useToast } from "@/hooks/use-toast"; // Toast notifications
-import { apiRequest } from "@/lib/queryClient"; // Helper for API requests
-import { bhutaneseSymbols } from "@/lib/utils"; // Theme symbols
-import Loader from "@/components/shared/Loader"; // Loading indicator
-import { LogOut, Settings, FileText, Mail, MessageSquare, Users, Image as ImageIcon } from "lucide-react"; // Icons
+import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient"; // Use updated apiRequest
+import { bhutaneseSymbols } from "@/lib/utils";
+import Loader from "@/components/shared/Loader";
+import { LogOut, Settings, FileText, Mail, Users, Palette, MessageSquare, Image as ImageIcon } from "lucide-react"; // Added Palette, MessageSquare, ImageIcon
 
 // Define the structure of the stats object expected from the API
 interface DashboardStat {
@@ -19,36 +19,27 @@ interface DashboardStat {
   link: string; // Route to link to
 }
 
-// Async function to fetch dashboard statistics from the backend
-async function fetchAdminStats(): Promise<DashboardStat[]> {
-    const res = await apiRequest("GET", "/api/admin/stats"); // Uses helper that includes credentials
-    if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ message: "Failed to parse error response" }));
-        throw new Error(errorData.message || `Failed to fetch admin stats: ${res.statusText}`);
-    }
-    return res.json();
-}
+// Removed separate fetchAdminStats function
 
 export default function AdminDashboard() {
-  // Get user info and logout mutation from the authentication context
   const { user, logoutMutation } = useAuth();
-  // Get the toast function for showing notifications
   const { toast } = useToast();
 
-  // Fetch dashboard statistics using React Query
+  // Fetch dashboard statistics using useQuery and apiRequest directly
   const { data: dashboardStats, isLoading: isLoadingStats, isError: isErrorStats, error: errorStats } = useQuery<DashboardStat[], Error>({
     queryKey: ['adminStats'], // Unique key for caching this query
-    queryFn: fetchAdminStats, // The function to fetch the data
-    staleTime: 1000 * 60 * 1, // Consider data stale after 1 minute for dashboard stats
+    // --- UPDATED queryFn ---
+    queryFn: () => apiRequest<DashboardStat[]>("GET", "/api/admin/stats"), // Use apiRequest directly
+    // --- End Update ---
+    staleTime: 1000 * 60 * 1, // Consider data stale after 1 minute
     refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 
-   // Handler for the logout button click
+   // Logout handler
    const handleLogout = () => {
-        logoutMutation.mutate(undefined, { // Pass undefined if mutate doesn't expect arguments
+        logoutMutation.mutate(undefined, {
             onSuccess: () => {
                 toast({ title: "Logged Out", description: "You have been successfully logged out." });
-                // No need to redirect here, ProtectedRoute/useAuth should handle it
             },
             onError: (err) => {
                  toast({ title: "Logout Failed", description: err.message || "An error occurred during logout.", variant: "destructive" });
@@ -57,36 +48,34 @@ export default function AdminDashboard() {
     };
 
   return (
-    <div className="min-h-screen bg-parchment"> {/* Main container with theme background */}
+    <div className="min-h-screen bg-parchment">
 
-      {/* Admin Header Section */}
-      <div className="bg-monastic-red text-parchment p-4 shadow-md sticky top-0 z-40"> {/* Make header sticky */}
+      {/* Admin Header */}
+      <div className="bg-monastic-red text-parchment p-4 shadow-md sticky top-0 z-40">
         <div className="container mx-auto flex justify-between items-center">
-          {/* Branding */}
           <div className="flex items-center space-x-2">
             <span className="text-2xl">{bhutaneseSymbols.dharmaWheel}</span>
             <h1 className="font-trajan text-xl tracking-wide">Sacred Bhutan Admin</h1>
           </div>
-          {/* Welcome Message & Logout Button */}
           <div className="flex items-center space-x-4">
             <span className="font-garamond hidden sm:inline">
-                Welcome, {user?.username || 'Administrator'}
+                Welcome, {user?.username || 'Admin'}
             </span>
+
             <Button
-              variant="outline"
               size="sm"
-              className="text-parchment border-parchment hover:bg-monastic-red/80 hover:text-parchment"
+              className="bg-monastic-red text-parchment hover:bg-monastic-red/90"
               onClick={handleLogout}
               disabled={logoutMutation.isPending}
               aria-label="Logout"
             >
-              <LogOut className={`h-4 w-4 ${logoutMutation.isPending ? 'animate-spin' : ''}`}/>
+            Logout
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Dashboard Main Content Area */}
+      {/* Dashboard Main Content */}
       <div className="container mx-auto p-6">
         <h2 className="font-trajan text-3xl text-monastic-red mb-8 text-center md:text-left">Dashboard Overview</h2>
 
@@ -97,121 +86,94 @@ export default function AdminDashboard() {
             <div className="text-center text-destructive bg-red-100 border border-destructive p-4 rounded-md mb-8">
                 Error loading dashboard stats: {errorStats?.message || "Unknown error"}
             </div>
-        ) : (
+        ) : dashboardStats && dashboardStats.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                {dashboardStats?.map((stat) => (
-                <Card key={stat.label} className="border-faded-gold bg-parchment/50 shadow-sm hover:shadow-md transition-shadow">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-monastic-red">
-                        {stat.label}
-                    </CardTitle>
-                    <span className="text-2xl text-monastic-red/80" role="img" aria-label={`${stat.label} icon`}>{stat.icon}</span>
-                    </CardHeader>
-                    <CardContent>
-                    <div className="text-3xl font-bold text-charcoal">{stat.value}</div>
-                    <Link href={stat.link} className="text-xs text-monastic-red hover:text-terracotta mt-1 inline-block font-semibold">
-                        Manage →
-                    </Link>
-                    </CardContent>
-                </Card>
+                {dashboardStats.map((stat) => (
+                    <Card key={stat.label} className="border-faded-gold bg-parchment/50 shadow-sm hover:shadow-md transition-shadow">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium text-monastic-red">{stat.label}</CardTitle>
+                            <span className="text-2xl text-monastic-red/80" role="img" aria-label={`${stat.label} icon`}>{stat.icon}</span>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-3xl font-bold text-charcoal">{stat.value}</div>
+                            <Link href={stat.link} className="text-xs text-monastic-red hover:text-terracotta mt-1 inline-block font-semibold">
+                                Manage →
+                            </Link>
+                        </CardContent>
+                    </Card>
                 ))}
+            </div>
+        ) : (
+            <div className="text-center text-charcoal/80 bg-gray-100 border border-gray-300 p-4 rounded-md mb-8">
+                Could not load dashboard statistics.
             </div>
         )}
 
         {/* Management Links Sections */}
         <div className="space-y-10">
-            {/* Content Management Section */}
+            {/* Content Management */}
             <div>
                 <h3 className="font-trajan text-xl text-monastic-red mb-4 border-b border-faded-gold pb-2 flex items-center gap-2">
-                    <FileText className="h-5 w-5" /> Content Management
+                    <Palette className="h-5 w-5" /> Page Content
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* Manage Tours Card */}
-                    <Link href="/admin/tours" className="block group">
-                        <Card className="border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg">
-                        <CardHeader> <CardTitle className="text-lg text-monastic-red">Manage Tours</CardTitle> </CardHeader>
-                        <CardContent> <p className="font-garamond text-sm">Add, edit, or remove pilgrimage tours.</p> </CardContent>
-                        </Card>
-                    </Link>
-                    {/* Manage About Page Card */}
-                    <Link href="/admin/content/about" className="block group">
-                        <Card className="border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg">
-                        <CardHeader> <CardTitle className="text-lg text-monastic-red">Manage About Page</CardTitle> </CardHeader>
-                        <CardContent> <p className="font-garamond text-sm">Edit the About Us page content.</p> </CardContent>
-                        </Card>
-                    </Link>
-                     {/* Manage Home Page Card */}
-                    <Link href="/admin/content/home" className="block group">
-                        <Card className="border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg">
-                        <CardHeader> <CardTitle className="text-lg text-monastic-red">Manage Home Page</CardTitle> </CardHeader>
-                        <CardContent> <p className="font-garamond text-sm">Edit content on the main home page.</p> </CardContent>
-                        </Card>
-                    </Link>
-                    {/* Manage Testimonials Card */}
-                    <Link href="/admin/testimonials" className="block group">
-                        <Card className="border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg">
-                        <CardHeader> <CardTitle className="text-lg text-monastic-red">Manage Testimonials</CardTitle> </CardHeader>
-                        <CardContent> <p className="font-garamond text-sm">Add, edit, or delete testimonials.</p> </CardContent>
-                        </Card>
-                    </Link>
-                    {/* Placeholder for Gallery Management */}
-                    <Card className="border-dashed border-faded-gold/50 bg-parchment/30 h-full flex items-center justify-center text-charcoal/60">
-                         <div className="text-center">
-                            <ImageIcon className="mx-auto h-8 w-8 mb-2"/>
-                            <p className="font-garamond text-sm">(Manage Gallery - Future)</p>
-                         </div>
-                    </Card>
+                    <Link href="/admin/content/home" className="block group"><Card className="dash-card"><CardHeader><CardTitle>Home Page</CardTitle></CardHeader><CardContent><p>Edit hero, intro, features, etc.</p></CardContent></Card></Link>
+                    <Link href="/admin/content/about" className="block group"><Card className="dash-card"><CardHeader><CardTitle>About Page</CardTitle></CardHeader><CardContent><p>Edit history, mission, values.</p></CardContent></Card></Link>
+                    <Link href="/admin/content/contact" className="block group"><Card className="dash-card"><CardHeader><CardTitle>Contact Page</CardTitle></CardHeader><CardContent><p>Edit address, map, hours.</p></CardContent></Card></Link>
+                    <Link href="/admin/content/gallery" className="block group"><Card className="dash-card"><CardHeader><CardTitle>Gallery Page</CardTitle></CardHeader><CardContent><p>Edit gallery intro text.</p></CardContent></Card></Link>
                 </div>
             </div>
 
-            {/* Communication Section */}
+             {/* Data Management */}
+            <div>
+                 <h3 className="font-trajan text-xl text-monastic-red mb-4 border-b border-faded-gold pb-2 flex items-center gap-2">
+                    <FileText className="h-5 w-5" /> Data Management
+                </h3>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                     <Link href="/admin/tours" className="block group"><Card className="dash-card"><CardHeader><CardTitle>Tours</CardTitle></CardHeader><CardContent><p>Add, edit, delete pilgrimage tours.</p></CardContent></Card></Link>
+                     <Link href="/admin/testimonials" className="block group"><Card className="dash-card"><CardHeader><CardTitle>Testimonials</CardTitle></CardHeader><CardContent><p>Manage pilgrim testimonials.</p></CardContent></Card></Link>
+                     <Link href="/admin/gallery" className="block group"><Card className="dash-card"><CardHeader><CardTitle>Gallery Images</CardTitle></CardHeader><CardContent><p>Upload & manage gallery photos.</p></CardContent></Card></Link>
+                 </div>
+             </div>
+
+            {/* Communication */}
              <div>
                 <h3 className="font-trajan text-xl text-monastic-red mb-4 border-b border-faded-gold pb-2 flex items-center gap-2">
                     <Mail className="h-5 w-5"/> Communication
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* Manage Inquiries Card */}
-                    <Link href="/admin/inquiries" className="block group">
-                        <Card className="border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg">
-                        <CardHeader> <CardTitle className="text-lg text-monastic-red">Manage Tour Inquiries</CardTitle> </CardHeader>
-                        <CardContent> <p className="font-garamond text-sm">View and handle tour inquiries.</p> </CardContent>
-                        </Card>
-                    </Link>
-                    {/* Manage Messages Card */}
-                    <Link href="/admin/messages" className="block group">
-                        <Card className="border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg">
-                        <CardHeader> <CardTitle className="text-lg text-monastic-red">Manage Contact Messages</CardTitle> </CardHeader>
-                        <CardContent> <p className="font-garamond text-sm">View and handle contact form messages.</p> </CardContent>
-                        </Card>
-                    </Link>
-                    {/* Placeholder for Newsletter Management */}
-                     <Card className="border-dashed border-faded-gold/50 bg-parchment/30 h-full flex items-center justify-center text-charcoal/60">
-                         <div className="text-center">
-                            <Users className="mx-auto h-8 w-8 mb-2"/>
-                            <p className="font-garamond text-sm">(Manage Subscribers - Future)</p>
-                         </div>
-                    </Card>
+                    <Link href="/admin/inquiries" className="block group"><Card className="dash-card"><CardHeader><CardTitle>Tour Inquiries</CardTitle></CardHeader><CardContent><p>View and handle tour inquiries.</p></CardContent></Card></Link>
+                    <Link href="/admin/messages" className="block group"><Card className="dash-card"><CardHeader><CardTitle>Contact Messages</CardTitle></CardHeader><CardContent><p>View contact form messages.</p></CardContent></Card></Link>
                 </div>
              </div>
 
-            {/* Settings Section */}
+            {/* Settings */}
              <div>
                 <h3 className="font-trajan text-xl text-monastic-red mb-4 border-b border-faded-gold pb-2 flex items-center gap-2">
                     <Settings className="h-5 w-5"/> Configuration
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* Site Settings Card */}
-                    <Link href="/admin/settings/site" className="block group">
-                        <Card className="border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg">
-                        <CardHeader> <CardTitle className="text-lg text-monastic-red">Site Settings</CardTitle> </CardHeader>
-                        <CardContent> <p className="font-garamond text-sm">Edit website name and other global settings.</p> </CardContent>
-                        </Card>
-                    </Link>
-                    {/* Add other settings cards here if needed */}
+                    <Link href="/admin/settings/site" className="block group"><Card className="dash-card"><CardHeader><CardTitle>Site Settings</CardTitle></CardHeader><CardContent><p>Edit site name & global settings.</p></CardContent></Card></Link>
                 </div>
              </div>
         </div>
       </div>
     </div>
   );
+}
+
+// Helper component for consistent card styling (optional)
+function DashCard({ children, className }: { children: React.ReactNode, className?: string }) {
+  return (
+    <Card className={`border-faded-gold hover:border-monastic-red transition-colors h-full bg-parchment/50 shadow-sm group-hover:shadow-lg ${className}`}>
+      {children}
+    </Card>
+  );
+}
+function DashCardPlaceholder({ children, className }: { children: React.ReactNode, className?: string }) {
+     return (
+         <Card className={`border-dashed border-faded-gold/50 bg-parchment/30 h-full flex items-center justify-center text-charcoal/60 p-4 ${className}`}>
+           {children}
+         </Card>
+     );
 }

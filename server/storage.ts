@@ -6,20 +6,27 @@ import type {
   Tour, InsertTour,
   Inquiry, InsertInquiry,
   Testimonial, InsertTestimonial,
-  GalleryImage, InsertGalleryImage,
-  NewsletterSubscriber, InsertNewsletter,
   ContactMessage, InsertContact,
   AboutPageContent, InsertAboutPageContent,
+  ContactPageSettings, InsertContactPageSettings,
+  GalleryPageSettings, InsertGalleryPageSettings
 } from "@shared/schema";
 
-// Define the interface ONLY in this file
+// Define the filter structure for getTours
+export interface TourFilters {
+  location?: string;
+}
+
+// Define the IStorage interface ONLY in this file
 export interface IStorage {
-  sessionStore: session.Store; // Add sessionStore to the interface
+  sessionStore: session.Store; // Session store implementation
 
   // User methods
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUserPassword(userId: number, newHashedPassword: string): Promise<boolean>;
+  updateUserUsername(userId: number, newUsername: string): Promise<boolean>;
 
   //Site Settings methods
   getSiteSettings(): Promise<SiteSettings | undefined>;
@@ -30,40 +37,33 @@ export interface IStorage {
   updateHomePageContent(content: InsertHomePageContent): Promise<HomePageContent | undefined>;
 
   // Tour methods
-  getTours(): Promise<Tour[]>;
+  // UPDATED: getTours now accepts an optional filters object
+  getTours(filters?: TourFilters): Promise<Tour[]>;
   getTour(id: number): Promise<Tour | undefined>;
   getFeaturedTours(): Promise<Tour[]>;
-  createTour(tour: InsertTour): Promise<Tour>;
-  updateTour(id: number, tour: Partial<InsertTour>): Promise<Tour | undefined>;
+  createTour(tour: InsertTour): Promise<Tour>; // Should include location
+  updateTour(id: number, tour: Partial<InsertTour>): Promise<Tour | undefined>; // Should allow updating location
   deleteTour(id: number): Promise<boolean>;
 
   // Inquiry methods
   getInquiries(): Promise<Inquiry[]>;
   getInquiry(id: number): Promise<Inquiry | undefined>;
   createInquiry(inquiry: InsertInquiry): Promise<Inquiry>;
-  updateInquiry(id: number, inquiry: Partial<Inquiry>): Promise<Inquiry | undefined>;
+  updateInquiry(id: number, inquiryUpdate: Partial<Pick<Inquiry, 'handled'>>): Promise<Inquiry | undefined>; // Typically only update 'handled' status
   deleteInquiry(id: number): Promise<boolean>;
 
   // Testimonial methods
   getTestimonials(): Promise<Testimonial[]>;
   getTestimonial(id: number): Promise<Testimonial | undefined>;
   createTestimonial(testimonial: InsertTestimonial): Promise<Testimonial>;
-  updateTestimonial(id: number, testimonialUpdate: Partial<InsertTestimonial>): Promise<Testimonial | undefined>; 
-  deleteTestimonial(id: number): Promise<boolean>; 
+  updateTestimonial(id: number, testimonialUpdate: Partial<InsertTestimonial>): Promise<Testimonial | undefined>;
+  deleteTestimonial(id: number): Promise<boolean>;
 
 
-  // Gallery methods
-  getGalleryImages(): Promise<GalleryImage[]>;
-  getGalleryImage(id: number): Promise<GalleryImage | undefined>;
-  createGalleryImage(image: InsertGalleryImage): Promise<GalleryImage>;
-
-  // Newsletter methods
-  addNewsletterSubscriber(subscriber: InsertNewsletter): Promise<NewsletterSubscriber>;
-
-  // Contact methods
+  // Contact Message methods
   getContactMessages(): Promise<ContactMessage[]>;
   createContactMessage(message: InsertContact): Promise<ContactMessage>;
-  updateContactMessage(id: number, message: Partial<ContactMessage>): Promise<ContactMessage | undefined>;
+  updateContactMessage(id: number, messageUpdate: Partial<Pick<ContactMessage, 'handled'>>): Promise<ContactMessage | undefined>; // Typically only update 'handled' status
   deleteContactMessage(id: number): Promise<boolean>;
 
   // Admin dashboard stats
@@ -72,4 +72,12 @@ export interface IStorage {
   // About Page Content methods
   getAboutPageContent(): Promise<AboutPageContent | undefined>;
   updateAboutPageContent(content: InsertAboutPageContent): Promise<AboutPageContent | undefined>;
+
+  // Contact Page Settings methods
+  getContactPageSettings(): Promise<ContactPageSettings | undefined>;
+  updateContactPageSettings(settings: InsertContactPageSettings): Promise<ContactPageSettings | undefined>;
+
+  // Gallery Page Settings methods
+  getGalleryPageSettings(): Promise<GalleryPageSettings | undefined>;
+  updateGalleryPageSettings(settings: InsertGalleryPageSettings): Promise<GalleryPageSettings | undefined>;
 }

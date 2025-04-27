@@ -23,6 +23,7 @@ import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 
 // Import Admin Page Components
+// Import Admin Page Components
 import AdminDashboard from "@/pages/Admin/AdminDashboard";
 import ManageTours from "@/pages/Admin/ManageTours";
 import ManageInquiries from "@/pages/Admin/ManageInquiries";
@@ -34,6 +35,9 @@ import ManageSiteSettings from "@/pages/Admin/ManageSiteSettings";
 
 // Optional DevTools
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import ManageGallery from "./pages/Admin/ManageGallery";
+import ManageGalleryPageText from "./pages/Admin/ManageGalleryPageText";
+import ManageContactPage from "./pages/Admin/ManageContactPage";
 
 // Type for the public site settings fetch
 interface PublicSiteSettings {
@@ -42,20 +46,18 @@ interface PublicSiteSettings {
 }
 
 // Fetch function for public site settings (runs once, cached)
-async function fetchSiteSettings(): Promise<PublicSiteSettings> {
-    const res = await apiRequest("GET", "/api/settings/site"); // Fetch from public endpoint
-    if (!res.ok) {
-        console.error("Failed to fetch initial site settings.");
-        // Return default on error to prevent app crash
-        return { siteName: "Sacred Bhutan Travels (Default)" };
-    }
-    // Only parse JSON if response is ok
-    return await res.json().catch(() => {
-         console.error("Failed to parse site settings JSON.");
-         return { siteName: "Sacred Bhutan Travels (Default)" };
-    });
-}
 
+async function fetchSiteSettings(): Promise<PublicSiteSettings> {
+  try {
+      const data = await apiRequest<PublicSiteSettings>("GET", "/api/settings/site");
+      if (!data || typeof data.siteName !== 'string') {
+          return { siteName: "Sacred Bhutan Travels (Default)" };
+      }
+      return data;
+  } catch (error) {
+      return { siteName: "Sacred Bhutan Travels (Fetch Error)" };
+  }
+}
 function Router() {
   const [location] = useLocation();
   // isAuthLoading checks if the initial user session check is complete
@@ -127,10 +129,10 @@ function Router() {
         <ProtectedRoute path="/admin/content/about" component={ManageAboutContent} />
         <ProtectedRoute path="/admin/content/home" component={ManageHomePage} />
         <ProtectedRoute path="/admin/settings/site" component={ManageSiteSettings} />
-        {/* Add future admin routes here (e.g., gallery management) */}
-        {/* <ProtectedRoute path="/admin/gallery" component={ManageGallery} /> */}
+        <ProtectedRoute path="/admin/gallery" component={ManageGallery} />
+        <ProtectedRoute path="/admin/content/contact" component={ManageContactPage} />
+        <ProtectedRoute path="/admin/content/gallery" component={ManageGalleryPageText} />
 
-        {/* Catch-all Not Found Route - Must be last */}
         <Route component={NotFound} />
       </Switch>
 
