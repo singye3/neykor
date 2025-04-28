@@ -119,7 +119,7 @@ export const tours = pgTable("tours", {
   accommodation: text("accommodation").notNull(),
   groupSize: text("groupSize").notNull(),
   price: integer("price").notNull(),
-  imageType: text("imageType"),
+  imageUrl: text("imageUrl"),
   itinerary: json("itinerary").notNull().$type<ItineraryDay[]>(),
   featured: boolean("featured").default(false),
 },

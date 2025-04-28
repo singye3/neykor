@@ -1,60 +1,61 @@
 // client/src/components/tours/TourDetail.tsx
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient"; // Use the corrected apiRequest
+import { apiRequest } from "@/lib/queryClient"; // Ensure apiRequest handles JSON parsing
 import { bhutaneseSymbols } from "@/lib/utils";
-import { getImageUrl } from "@/lib/utils";
+// import { getImageUrl } from "@/lib/utils"; // Removed as we now use imageUrl directly
 import BhutaneseBorder from "@/components/shared/BhutaneseBorder";
-import TourInquiryForm from "@/components/tours/TourInquiryForm";
+import TourInquiryForm from "@/components/tours/TourInquiryForm"; // Inquiry form component
 import Loader from "@/components/shared/Loader";
-import type { Tour } from "@shared/schema";
+import type { Tour } from "@shared/schema"; // Ensure Tour type includes imageUrl
 
 interface TourDetailProps {
   tourId: string;
 }
 
-// Removed the separate fetchTour function as apiRequest handles the logic
+// Default image to use if tour.imageUrl is missing
+const DEFAULT_TOUR_IMAGE = "/placeholder-tour-image.jpg"; // Replace with your actual placeholder path
 
 export default function TourDetail({ tourId }: TourDetailProps) {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
   // Use React Query to fetch the specific tour data
   const { data: tour, isLoading, isError, error } = useQuery<Tour, Error>({
-    queryKey: ['tour', tourId], // Query key including the specific tour ID
-    // --- UPDATED queryFn ---
-    // Directly use apiRequest, specifying the expected Tour type.
-    // apiRequest handles fetch, error checks, and JSON parsing.
+    queryKey: ['tour', tourId], // Query key for caching
     queryFn: () => {
-        if (!tourId || isNaN(parseInt(tourId))) {
-            // Prevent fetch if ID is invalid, throw error for React Query
-             console.error("QueryFn: Invalid Tour ID provided:", tourId);
-             throw new Error("Invalid Tour ID provided.");
-        }
-        return apiRequest<Tour>("GET", `/api/tours/${tourId}`);
+      // Basic validation before making the API call
+      if (!tourId || isNaN(parseInt(tourId))) {
+        console.error("QueryFn: Invalid Tour ID provided:", tourId);
+        throw new Error("Invalid Tour ID provided.");
+      }
+      // Use apiRequest to fetch and parse the specific tour
+      return apiRequest<Tour>("GET", `/api/tours/${tourId}`);
     },
-    // --- End Update ---
-    enabled: !!tourId && !isNaN(parseInt(tourId)), // Only run if tourId looks valid
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    refetchOnWindowFocus: false, // Optional: prevent refetch on focus
+    enabled: !!tourId && !isNaN(parseInt(tourId)), // Only run if tourId seems valid
+    staleTime: 1000 * 60 * 5, // Data is fresh for 5 minutes
+    refetchOnWindowFocus: false,
   });
 
   // Effect for image preloading
   useEffect(() => {
-    setIsImageLoaded(false);
-    if (tour?.imageType) {
+    setIsImageLoaded(false); // Reset loading state when tour changes
+    // Use the direct imageUrl from the tour data if it exists
+    const imageUrlToLoad = tour?.imageUrl || DEFAULT_TOUR_IMAGE;
+
+    if (imageUrlToLoad) {
       const img = new Image();
-      img.src = getImageUrl(tour.id, tour.imageType || "genericLandscape");
+      img.src = imageUrlToLoad;
       img.onload = () => setIsImageLoaded(true);
       img.onerror = () => {
           console.warn(`Failed to preload image: ${img.src}`);
-          setIsImageLoaded(true); // Avoid infinite loader on image error
+          setIsImageLoaded(true); // Still mark as loaded to show content
       }
-    } else if (tour) { // If tour exists but no imageType, mark as loaded
-      setIsImageLoaded(true);
+    } else {
+        setIsImageLoaded(true); // No image URL provided, treat as loaded
     }
-  }, [tour]); // Depend on tour data
+  }, [tour]); // Rerun when tour data updates
 
-  // --- Conditional Rendering ---
+  // --- Conditional Rendering based on query state ---
 
   if (isLoading) {
     return (
@@ -83,7 +84,6 @@ export default function TourDetail({ tourId }: TourDetailProps) {
   }
 
   if (!tour) {
-    // This state could be reached if enabled=false or fetch returns null/undefined unexpectedly
     return (
       <div className="py-16 lokta-paper-bg">
         <div className="container mx-auto px-4">
@@ -99,7 +99,8 @@ export default function TourDetail({ tourId }: TourDetailProps) {
   }
 
   // --- Success Render ---
-  const heroImageUrl = getImageUrl(tour.id, tour.imageType || "genericLandscape");
+  // Directly use tour.imageUrl or fallback to the default
+  const heroImageUrl = tour.imageUrl || DEFAULT_TOUR_IMAGE;
 
   return (
     <section id="tour-detail" className="py-16 lokta-paper-bg">
@@ -123,7 +124,7 @@ export default function TourDetail({ tourId }: TourDetailProps) {
               <div className="w-full h-full flex items-center justify-center"><Loader /></div>
             ) : (
               <img
-                src={heroImageUrl}
+                src={heroImageUrl} // Use the direct URL or default
                 alt={`Scenic view for ${tour.title}`}
                 className="w-full h-full object-cover filter-aged transition-opacity duration-500 ease-in-out"
                 style={{ opacity: isImageLoaded ? 1 : 0 }}
@@ -173,7 +174,7 @@ export default function TourDetail({ tourId }: TourDetailProps) {
           </div>
 
           {/* Inquiry Form */}
-          <TourInquiryForm tourId={tour.id.toString()} tourName={tour.title} />
+          <TourInquiryForm tourId={tour.id} tourName={tour.title} />
 
         </BhutaneseBorder>
       </div>

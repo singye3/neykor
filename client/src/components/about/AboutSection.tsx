@@ -6,19 +6,13 @@ import Loader from "@/components/shared/Loader";
 import type { AboutPageContent } from "@shared/schema"; // Import the type
 import { apiRequest } from "@/lib/queryClient"; // Use apiRequest for consistency
 
-// Removed the separate fetchAboutContent function
-
 export default function AboutSection() {
   const [imgLoaded, setImgLoaded] = useState(false);
 
   // Fetch data using useQuery
   const { data: content, isLoading, error, isError } = useQuery<AboutPageContent, Error>({ // Added Error type for query
     queryKey: ['aboutContent'], // Unique query key
-    // --- UPDATED queryFn ---
-    // Directly use apiRequest, specifying the expected return type.
-    // apiRequest now handles fetch, error checks, and JSON parsing.
     queryFn: () => apiRequest<AboutPageContent>("GET", "/api/content/about"),
-    // --- End Update ---
     staleTime: 1000 * 60 * 10, // Cache for 10 minutes
     refetchOnWindowFocus: false,
   });
