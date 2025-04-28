@@ -25,7 +25,7 @@ export default function Testimonials({
   });
 
   return (
-    <section className="py-16 lokta-paper-bg">
+    <section className="py-16 textile-texture-bg">
       <div className="container mx-auto px-4">
         {/* Section Heading */}
         <h2 className="font-trajan text-3xl text-monastic-red text-center mb-12">

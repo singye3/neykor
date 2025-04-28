@@ -74,7 +74,8 @@ export default function Home() {
         heading={content.carouselHeading}
       />
       <WhyChooseUs
-        heading={content.whyHeading}
+        // heading={content.whyHeading}
+        heading="Why Choose Us?"
         why1={{ icon: content.why1Icon, title: content.why1Title, text: content.why1Text }}
         why2={{ icon: content.why2Icon, title: content.why2Title, text: content.why2Text }}
         why3={{ icon: content.why3Icon, title: content.why3Title, text: content.why3Text }}

@@ -48,7 +48,7 @@ export default function FeaturedPilgrimages({
   }, [mapURL]);
 
   return (
-    <section id="pilgrimages" className="py-16 textile-texture-bg">
+    <section id="pilgrimages" className="py-16 bg-parchment-dark textile-texture-bg">
       <div className="container mx-auto px-4">
         {/* Use heading prop */}
         <h2 className="font-trajan text-3xl text-monastic-red text-center mb-12">

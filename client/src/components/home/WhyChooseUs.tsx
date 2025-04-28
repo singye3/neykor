@@ -20,10 +20,10 @@ export default function WhyChooseUs({
   why3 = { icon: "🤝", title: "Authentic Encounters", text: "Default text 3..." },
 }: WhyChooseUsProps) { // Destructure props
 return (
-  <section className="py-16 wood-texture-bg">
+  <section className="py-16 bg-parchment-dark textile-texture-bg">
     <div className="container mx-auto px-4">
       {/* Use heading prop */}
-      <h2 className="font-trajan text-3xl text-parchment text-center mb-12">
+      <h2 className="font-trajan text-3xl text-monastic-red text-center mb-12">
           {heading}
       </h2>
 

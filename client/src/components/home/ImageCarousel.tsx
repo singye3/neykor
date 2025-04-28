@@ -80,7 +80,7 @@ const ImageCarousel = ({
 
     // --- Render Carousel when data is ready ---
     return (
-        <section className="py-12 md:py-16 bg-parchment-dark textile-texture-bg">
+        <section className="py-12 md:py-16 textile-texture-bg">
             <div className="container mx-auto px-4">
                  {/* Use heading prop */}
                 <h2 className="text-3xl md:text-4xl font-bold text-charcoal text-center mb-8 md:mb-12">
