@@ -133,7 +133,7 @@ export default function ManageTours() {
                         <span><strong className="font-semibold">Duration:</strong> {tour.duration}</span>
                         <span><strong className="font-semibold">Difficulty:</strong> {tour.difficulty}</span>
                         <span><strong className="font-semibold">Location:</strong> {tour.location}</span>
-                         <span><strong className="font-semibold">Price:</strong> ${tour.price.toLocaleString()}</span>
+                         <span><strong className="font-semibold">Price:</strong> Nu: {tour.price.toLocaleString()}</span>
                         <Badge variant={tour.featured ? "default": "outline"} className={`ml-auto md:ml-2 ${tour.featured ? 'bg-yellow-600 text-white': 'border-faded-gold text-charcoal/90'}`}>
                             {tour.featured ? "Featured" : "Standard"}
                         </Badge>

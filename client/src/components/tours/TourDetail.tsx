@@ -169,7 +169,7 @@ export default function TourDetail({ tourId }: TourDetailProps) {
               <li className="flex items-start"><span className="text-faded-gold mr-3 mt-1 opacity-90">{bhutaneseSymbols.diamondBullet}</span><span><strong>Difficulty:</strong> {tour.difficulty}</span></li>
               <li className="flex items-start"><span className="text-faded-gold mr-3 mt-1 opacity-90">{bhutaneseSymbols.diamondBullet}</span><span><strong>Accommodation:</strong> {tour.accommodation}</span></li>
               <li className="flex items-start"><span className="text-faded-gold mr-3 mt-1 opacity-90">{bhutaneseSymbols.diamondBullet}</span><span><strong>Group Size:</strong> {tour.groupSize}</span></li>
-              <li className="flex items-start"><span className="text-faded-gold mr-3 mt-1 opacity-90">{bhutaneseSymbols.diamondBullet}</span><span><strong>Price:</strong> From ${tour.price.toLocaleString()} per person</span></li>
+              <li className="flex items-start"><span className="text-faded-gold mr-3 mt-1 opacity-90">{bhutaneseSymbols.diamondBullet}</span><span><strong>Price:</strong> From Nu: {tour.price.toLocaleString()} per person</span></li>
             </ul>
           </div>
 

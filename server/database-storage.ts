@@ -13,9 +13,9 @@ import {
   contactPageSettings, type ContactPageSettings, type InsertContactPageSettings, 
   galleryPageSettings, type GalleryPageSettings, type InsertGalleryPageSettings
 } from "@shared/schema";
-import { eq, sql, desc } from "drizzle-orm";
+import { eq, sql, desc, and } from "drizzle-orm";
 import { db, pool } from "./db";
-import type { IStorage } from "./storage"; // Import the Interface
+import type { IStorage, TourFilters } from "./storage"; // Import the Interface
 import connectPgSimple from "connect-pg-simple";
 import session from "express-session";
 
@@ -150,10 +150,17 @@ export class DatabaseStorage implements IStorage {
   // ==========================================
   // Tour methods
   // ==========================================
-  async getTours(): Promise<Tour[]> {
-    const allTours = await db.select().from(tours);
-    // Drizzle automatically parses JSON. Add fallback for safety.
-    return allTours.map(tour => ({
+  async getTours(filters?: TourFilters): Promise<Tour[]> { // <-- Accept optional filters parameter
+    let query = db.select().from(tours).$dynamic(); // Use $dynamic() for conditional clauses
+    const conditions = [];
+    if (filters?.location) {
+      conditions.push(eq(tours.location, filters.location));
+    }
+    if (conditions.length > 0) {
+      query = query.where(conditions.length > 1 ? and (...conditions) : conditions[0]);
+    }
+    const filteredTours = await query;
+    return filteredTours.map(tour => ({
         ...tour,
         itinerary: Array.isArray(tour.itinerary) ? tour.itinerary : []
     }));
