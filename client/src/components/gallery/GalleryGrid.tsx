@@ -1,8 +1,6 @@
-// client/src/components/gallery/GalleryGrid.tsx
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient"; // Use corrected apiRequest
+import { apiRequest } from "@/lib/queryClient";
 import BhutaneseBorder from "@/components/shared/BhutaneseBorder";
 import Loader from "@/components/shared/Loader";
 import { AlertCircle, ImageIcon } from "lucide-react";
@@ -24,26 +22,21 @@ interface GalleryGridProps {
   limit?: number;
 }
 
-// The GalleryGrid component using aspect-square layout with background images
+// The GalleryGrid component with improved image handling
 export default function GalleryGrid({ limit }: GalleryGridProps) {
-  // Fetch data using useQuery and apiRequest directly
   const { data: images, isLoading, isError, error } = useQuery<ImageKitGalleryItem[], Error>({
-    queryKey: ['imageKitGallery', '/uploads/gallery'], // Query key
-    // --- UPDATED queryFn ---
-    // Directly use apiRequest, specifying the expected return type array.
+    queryKey: ['imageKitGallery', '/uploads/gallery'],
     queryFn: () => apiRequest<ImageKitGalleryItem[]>("GET", "/api/gallery/images"),
-    // --- End Update ---
-    staleTime: 1000 * 60 * 5, // 5 minutes cache freshness
+    staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
   });
 
-  // State to track loading status for each image URL
   type LoadStatus = 'loading' | 'loaded' | 'error';
   const [imageLoadStatus, setImageLoadStatus] = useState<Record<string, LoadStatus>>({});
 
-  // --- Image Preloading Effect ---
+  // Image Preloading and State Tracking Effect
   useEffect(() => {
-    if (!images) return; // Don't run if images haven't loaded yet
+    if (!images) return;
 
     const currentUrls = new Set(images.map(img => img.thumbnailUrl || img.url));
     const statusUpdates: Record<string, LoadStatus> = {};
@@ -51,7 +44,6 @@ export default function GalleryGrid({ limit }: GalleryGridProps) {
 
     images.forEach((image) => {
       const urlToLoad = image.thumbnailUrl || image.url;
-      // Only initiate loading if we haven't recorded a final status ('loaded' or 'error') yet
       if (!imageLoadStatus[urlToLoad] || imageLoadStatus[urlToLoad] === 'loading') {
           if (!imageLoadStatus[urlToLoad]) {
               statusUpdates[urlToLoad] = 'loading';
@@ -61,26 +53,34 @@ export default function GalleryGrid({ limit }: GalleryGridProps) {
           const img = new Image();
           img.src = urlToLoad;
           img.onload = () => {
-              setImageLoadStatus(prev => ({ ...prev, [urlToLoad]: 'loaded' }));
+              setImageLoadStatus(prev => {
+                  if (prev[urlToLoad] === 'loading') {
+                     return { ...prev, [urlToLoad]: 'loaded' };
+                  }
+                  return prev;
+              });
           };
           img.onerror = () => {
-              console.error("Failed to load image:", urlToLoad);
-              setImageLoadStatus(prev => ({ ...prev, [urlToLoad]: 'error' }));
+              console.error("Failed to load image during preload:", urlToLoad);
+               setImageLoadStatus(prev => {
+                  if (prev[urlToLoad] === 'loading') {
+                     return { ...prev, [urlToLoad]: 'error' };
+                  }
+                  return prev;
+              });
           };
       }
     });
 
-    // Apply initial 'loading' statuses if needed
     if (needsInitialStatusUpdate) {
         setImageLoadStatus(prev => ({ ...prev, ...statusUpdates }));
     }
 
-    // Optional cleanup: Remove statuses for images no longer present
-    setImageLoadStatus(prev => {
+     setImageLoadStatus(prev => {
         const nextState = { ...prev };
         let stateChanged = false;
         Object.keys(nextState).forEach(url => {
-            if (!currentUrls.has(url)) {
+            if (!currentUrls.has(url) && nextState[url] !== undefined) {
                 delete nextState[url];
                 stateChanged = true;
             }
@@ -88,17 +88,14 @@ export default function GalleryGrid({ limit }: GalleryGridProps) {
         return stateChanged ? nextState : prev;
     });
 
-  }, [images]); // Dependency: Rerun effect if the images array changes
+  }, [images]);
 
-  // Apply limit if provided
   const displayedImages = limit && images ? images.slice(0, limit) : images;
 
-  // === Render Loading State ===
   if (isLoading) {
     return <div className="flex justify-center py-16 min-h-[300px]"><Loader /></div>;
   }
 
-  // === Render Error State ===
   if (isError) {
      return (
         <div className="max-w-4xl mx-auto text-center text-destructive bg-red-100 border border-destructive p-6 rounded-md">
@@ -108,7 +105,6 @@ export default function GalleryGrid({ limit }: GalleryGridProps) {
      );
   }
 
-  // === Render No Images State ===
    if (!displayedImages || displayedImages.length === 0) {
      return (
         <div className="max-w-4xl mx-auto text-center text-charcoal/80 p-8">
@@ -118,47 +114,54 @@ export default function GalleryGrid({ limit }: GalleryGridProps) {
      );
    }
 
-  // === Success State: Render the grid ===
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Parent container with border and page-like background */}
       <BhutaneseBorder className="p-4 md:p-6 bg-parchment/70 mb-8 shadow-sm rounded">
-        {/* Image Grid */}
+        {/* Image Grid Container */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
           {displayedImages.map((image) => {
              const displayUrl = image.thumbnailUrl || image.url;
-             // Ensure a default status of 'loading' if the effect hasn't set it yet
              const loadStatus = imageLoadStatus[displayUrl] ?? 'loading';
 
              return (
-                // Container div: Square, holds background, centers content, applies effects
                 <div
                     key={image.id}
                     className={`
-                        aspect-square overflow-hidden group relative
+                        aspect-[4/3]
+                        overflow-hidden relative
                         border border-faded-gold/50 rounded
-                        flex items-center justify-center
                         transition-all duration-300 ease-in-out
-                        bg-parchment-dark/50 
-                        ${loadStatus === 'loaded' ? 'filter-aged group-hover:filter-none group-hover:scale-105' : ''}
+                        bg-parchment-dark/50
+                        ${loadStatus === 'loaded' ? 'filter-aged hover:filter-none hover:scale-105' : ''}
+                        group
                     `}
-                    style={{
-                        ...(loadStatus === 'loaded' && { // Apply background only when loaded
-                            backgroundImage: `url(${displayUrl})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center center',
-                            backgroundRepeat: 'no-repeat',
-                            backgroundColor: 'transparent', // Override bg-parchment-dark
-                        })
-                    }}
                 >
-                    {/* Show loader only when loading */}
-                    {loadStatus === 'loading' && (
-                        <Loader />
+                    {/* Image container - will completely fill the parent div */}
+                    {loadStatus === 'loaded' && (
+                        <img
+                            src={displayUrl}
+                            alt={image.name}
+                            className="absolute inset-0 w-full h-full object-cover"
+                            loading="lazy"
+                            onError={() => {
+                                setImageLoadStatus(prev => ({
+                                    ...prev,
+                                    [displayUrl]: 'error'
+                                }));
+                            }}
+                        />
                     )}
-                    {/* Show error icon only on error */}
+
+                    {/* Loader Overlay - Positioned absolutely */}
+                    {loadStatus === 'loading' && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-parchment-dark/80 z-10">
+                            <Loader />
+                        </div>
+                    )}
+
+                    {/* Error Overlay - Positioned absolutely */}
                     {loadStatus === 'error' && (
-                        <div className="w-full h-full flex items-center justify-center text-destructive opacity-70 p-2" title={`Error loading ${image.name}`}>
+                        <div className="absolute inset-0 flex items-center justify-center bg-red-100/80 text-destructive z-10 p-2" title={`Error loading ${image.name}`}>
                             <AlertCircle className="w-1/2 h-1/2"/>
                         </div>
                     )}

@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient"; // Use corrected apiRequest
+import { apiRequest } from "@/lib/queryClient";
 import { bhutaneseSymbols } from "@/lib/utils";
 import Loader from "@/components/shared/Loader";
 import { Button } from "@/components/ui/button";
@@ -15,62 +15,80 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Loader2 } from "lucide-react";
 
+// --- Use the correct shared path for ImageUploader ---
+import { ImageUploader } from "./ImageUploader";
+// --- END ---
+
 // Import the schema and types
 import { AboutPageContent, InsertAboutPageContent, upsertAboutPageContentSchema } from "@shared/schema";
 
-// Removed separate fetchAboutContentAdmin function
+// Define the form values type based on the schema
+type AboutPageFormValues = InsertAboutPageContent;
+
+// --- Define a constant for the upload folder ---
+const ABOUT_IMAGE_FOLDER = "about";
+// --- END ---
 
 export default function ManageAboutContent() {
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
-    // Fetch current content using useQuery and apiRequest directly
+    // Fetch current content
     const { data: currentContent, isLoading: isLoadingContent, isError, error } = useQuery<AboutPageContent, Error>({
-        queryKey: ['aboutContentAdmin'], // Query key specific to admin fetch
+        queryKey: ['aboutContentAdmin'],
         queryFn: () => apiRequest<AboutPageContent>("GET", "/api/content/about"),
-        // --- End Update ---
-        staleTime: 1000 * 60, // Keep admin data fresh for 1 minute, then refetch
-        refetchOnWindowFocus: true, // Refetch on focus for admin pages
+        staleTime: 1000 * 60,
+        refetchOnWindowFocus: true,
     });
 
     // Initialize React Hook Form
-    const form = useForm<InsertAboutPageContent>({
+    const form = useForm<AboutPageFormValues>({
         resolver: zodResolver(upsertAboutPageContentSchema),
-        // Set initial defaults (will be overridden by useEffect)
+        // Align with schema, using undefined for optional fields
         defaultValues: {
-            mainHeading: "", imageUrl: "", imageAlt: "", historyText: "",
-            missionText: "", philosophyHeading: "", philosophyQuote: "",
-            value1Title: "", value1Text: "", value2Title: "", value2Text: "",
+            mainHeading: "",
+            imageUrl: undefined, // Use undefined if optional in schema
+            imageAlt: "",
+            historyText: "",
+            missionText: "",
+            philosophyHeading: "",
+            philosophyQuote: "",
+            value1Title: "", value1Text: "",
+            value2Title: "", value2Text: "",
             value3Title: "", value3Text: "",
         },
     });
 
-    // Populate form with fetched data once available
+    // Populate form with fetched data
     useEffect(() => {
         if (currentContent) {
-            form.reset(currentContent); // Use reset to update form values
+            // Reset form, ensuring undefined for potentially missing/empty URL
+            form.reset({
+                ...currentContent,
+                imageUrl: currentContent.imageUrl || undefined, // Handle empty string or null
+            });
         }
-    }, [currentContent, form]); // Dependencies
+    }, [currentContent, form]);
 
     // Mutation for updating content
-    const updateMutation = useMutation<AboutPageContent, Error, InsertAboutPageContent>({
-        // --- UPDATED mutationFn ---
-        mutationFn: async (data: InsertAboutPageContent) => {
-            // Directly use apiRequest, which returns parsed JSON or throws
+    const updateMutation = useMutation<AboutPageContent, Error, AboutPageFormValues>({
+        mutationFn: async (data: AboutPageFormValues) => {
+            // Data should conform to schema (string | undefined for imageUrl)
             return apiRequest<AboutPageContent>("PATCH", "/api/content/about", data);
         },
-        // --- End Update ---
         onSuccess: (updatedData) => {
             toast({
                 title: "Content Updated",
                 description: "The About Us page content has been saved successfully.",
             });
-            // Update the query cache for this admin page instantly
-            queryClient.setQueryData(['aboutContentAdmin'], updatedData);
-            // Invalidate the public query cache to force refetch on next visit
-            queryClient.invalidateQueries({ queryKey: ['aboutContent'] }); // Assuming 'aboutContent' is the public key
-            // Reset form with updated data to clear dirty state
-            form.reset(updatedData);
+             // Reset form with updated data, using undefined for missing URL
+            const resetData = {
+                ...updatedData,
+                imageUrl: updatedData.imageUrl || undefined, // Handle empty string or null
+            };
+            queryClient.setQueryData(['aboutContentAdmin'], resetData);
+            queryClient.invalidateQueries({ queryKey: ['aboutContent'] });
+            form.reset(resetData);
         },
         onError: (error: Error) => {
              console.error("Error updating about content:", error);
@@ -83,15 +101,25 @@ export default function ManageAboutContent() {
     });
 
     // Form submission handler
-    const onSubmit = (data: InsertAboutPageContent) => {
-        updateMutation.mutate(data); // Trigger the mutation
+    const onSubmit = (data: AboutPageFormValues) => {
+         // Ensure empty strings become undefined before sending if needed by backend/schema
+         // (Assuming schema treats empty string as invalid for optional URL)
+        const dataToSend = {
+             ...data,
+             imageUrl: data.imageUrl || undefined,
+         };
+        updateMutation.mutate(dataToSend);
     };
+
+    // --- Watch the imageUrl field for the ImageUploader ---
+    const watchedImageUrl = form.watch('imageUrl');
+    // --- END ---
 
     return (
         <div className="min-h-screen bg-parchment">
             {/* Admin Header */}
             <div className="bg-monastic-red text-parchment p-4 sticky top-0 z-40 shadow-md">
-                <div className="container mx-auto flex justify-between items-center">
+                 <div className="container mx-auto flex justify-between items-center">
                     <div className="flex items-center space-x-2">
                     <Link href="/admin/dashboard" className="flex items-center space-x-2 hover:text-faded-gold transition-colors">
                         <span className="text-2xl">
@@ -107,17 +135,14 @@ export default function ManageAboutContent() {
             <div className="container mx-auto p-6">
                 <h2 className="font-trajan text-2xl text-monastic-red mb-6">Edit About Us Page</h2>
 
-                {/* Loading State */}
                 {isLoadingContent ? (
                     <div className="flex justify-center py-16"><Loader /></div>
                 ) : isError ? (
-                    // Error State
                      <div className="text-center text-destructive bg-red-100 border border-destructive p-6 rounded shadow max-w-2xl mx-auto">
                         <h3 className="font-semibold text-lg mb-2">Error Loading Content</h3>
                         <p>{error?.message || "Could not load the current content. Please refresh or try again later."}</p>
                     </div>
                 ) : (
-                    // Form Display State
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-10">
                             {/* Main Section Card */}
@@ -125,7 +150,35 @@ export default function ManageAboutContent() {
                                 <CardHeader><CardTitle className="text-lg text-monastic-red font-semibold">Main Section</CardTitle></CardHeader>
                                 <CardContent className="space-y-4">
                                     <FormField control={form.control} name="mainHeading" render={({ field }) => ( <FormItem><FormLabel>Main Heading</FormLabel><FormControl><Input {...field} placeholder="e.g., Our Sacred Journey" className="parchment-input" /></FormControl><FormMessage /></FormItem> )} />
-                                    <FormField control={form.control} name="imageUrl" render={({ field }) => ( <FormItem><FormLabel>Image URL</FormLabel><FormControl><Input {...field} type="url" placeholder="https://..." className="parchment-input" /></FormControl><FormMessage /></FormItem> )} />
+
+                                    {/* --- UPDATED: ImageUploader Integration using form.watch/setValue --- */}
+                                    <ImageUploader
+                                        folderName={ABOUT_IMAGE_FOLDER}
+                                        initialImageUrl={watchedImageUrl} // Use watched value (string | undefined)
+                                        onUploadSuccess={(url) => {
+                                            // Use setValue to update form state for 'imageUrl'
+                                            form.setValue('imageUrl', url, {
+                                                shouldDirty: true, // Mark form as dirty
+                                                shouldValidate: true // Trigger validation for the field
+                                            });
+                                        }}
+                                        label="Main Image" // Use internal label of ImageUploader
+                                        className="mt-2"
+                                    />
+                                    {/* Separate FormField for displaying validation messages for imageUrl */}
+                                    <FormField
+                                        control={form.control}
+                                        name="imageUrl" // Link to the correct field name
+                                        render={() => (
+                                            <FormItem className="mt-0 pt-0"> {/* Adjust spacing if needed */}
+                                                {/* Label is handled by ImageUploader above */}
+                                                {/* Only render the message component */}
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    {/* --- END UPDATE --- */}
+
                                     <FormField control={form.control} name="imageAlt" render={({ field }) => ( <FormItem><FormLabel>Image Alt Text (for accessibility)</FormLabel><FormControl><Input {...field} placeholder="Describe the image" className="parchment-input" /></FormControl><FormMessage /></FormItem> )} />
                                     <FormField control={form.control} name="historyText" render={({ field }) => ( <FormItem><FormLabel>History Paragraph</FormLabel><FormControl><Textarea {...field} rows={5} placeholder="Describe the company history..." className="parchment-input" /></FormControl><FormMessage /></FormItem> )} />
                                     <FormField control={form.control} name="missionText" render={({ field }) => ( <FormItem><FormLabel>Mission Paragraph</FormLabel><FormControl><Textarea {...field} rows={5} placeholder="Describe the company mission..." className="parchment-input" /></FormControl><FormMessage /></FormItem> )} />
