@@ -1,1 +1,1 @@
-Website for Sacred Bhutan Travels
+Website for Bhutan Travels
